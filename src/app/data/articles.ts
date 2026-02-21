@@ -102,36 +102,52 @@ Different models consume tokens at different rates. Opus uses more tokens per re
     icon: '🔑',
     category: 'features',
     content: `
-Every OpenClaw instance comes with SSH access for advanced users.
+Every OpenClaw instance comes with full SSH access — you own the machine.
 
-## Getting your key
+## Getting your credentials
 
 1. Send \`/ssh\` in the Telegram chat
-2. You'll receive a \`.pem\` private key file and connection details
-3. Save the file to your computer
+2. The bot sends you a \`.pem\` private key file along with connection details:
+   - **Host** — your instance's public IP
+   - **Port** — 22
+   - **User** — ubuntu
 
 ## Connecting
 
 \`\`\`bash
-# Set permissions (required)
+# Save the key file, then set permissions (required)
 chmod 600 openclaw.pem
 
 # Connect
 ssh -i openclaw.pem ubuntu@<your-host-ip>
 \`\`\`
 
+> If you get a "permission denied" error, double-check that you ran \`chmod 600\` on the key file.
+
 ## What you can do
 
-- Browse your persisted files in \`/home/ubuntu\`
-- Check agent logs
-- Install additional tools
-- Run scripts alongside your AI agent
+Once connected you land in \`/home/ubuntu\` on your dedicated instance:
+
+- Browse and edit your persisted files
+- Tail agent logs in real time
+- Install additional tools and runtimes
+- Run scripts, cron jobs, or services alongside your AI agent
+- Transfer files with \`scp\` or \`rsync\`
+
+## When the key isn't ready
+
+If your instance is still being provisioned, the bot will reply:
+
+> *"Failed to retrieve SSH key. Your instance may still be provisioning."*
+
+Wait a couple of minutes for setup to complete and try \`/ssh\` again.
 
 ## Security
 
-- Key-based authentication only — passwords are disabled
-- Each client gets a unique ED25519 keypair
-- Root login is disabled
+- **Ed25519 keypair** — generated uniquely for each client during provisioning
+- **Key-only auth** — password authentication is disabled
+- **No root login** — \`PermitRootLogin\` is set to \`no\`
+- Your private key is stored encrypted in a private S3 bucket and only delivered to your Telegram chat
     `,
   },
   {
