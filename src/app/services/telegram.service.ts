@@ -37,6 +37,15 @@ export class TelegramService {
     this.webapp?.HapticFeedback.impactOccurred(type);
   }
 
+  showAlert(message: string, callback?: () => void) {
+    if (this.webapp) {
+      this.webapp.showAlert(message, callback);
+    } else {
+      alert(message);
+      callback?.();
+    }
+  }
+
   close() {
     this.webapp?.close();
   }

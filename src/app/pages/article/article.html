@@ -5,7 +5,7 @@
     <p class="article-sub">{{ subtitle() }}</p>
   </div>
 
-  <div class="article-body" [innerHTML]="html()"></div>
+  <div class="article-body" [innerHTML]="html()" (click)="onBodyClick($event)"></div>
 
   <!-- Back link for desktop/web (no Telegram BackButton) -->
   <div class="article-footer">

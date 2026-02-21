@@ -22,6 +22,7 @@ interface TelegramWebApp {
   ready(): void;
   expand(): void;
   close(): void;
+  showAlert(message: string, callback?: () => void): void;
   setHeaderColor(color: string): void;
   setBackgroundColor(color: string): void;
   onEvent(event: string, callback: () => void): void;
