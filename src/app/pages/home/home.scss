@@ -24,6 +24,27 @@
   }
 }
 
+.invite-banner {
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--tg-theme-secondary-bg-color);
+  text-align: center;
+
+  .invite-icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--tg-theme-hint-color);
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
 .card-item {
   display: flex;
   align-items: center;
