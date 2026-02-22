@@ -33,7 +33,7 @@ body {
 
   // On wider screens (desktop browser), show a phone-like frame
   @media (min-width: 480px) {
-    background: #e8e8ed;
+    background: var(--tg-theme-secondary-bg-color);
 
     app-root {
       background: var(--tg-theme-bg-color);

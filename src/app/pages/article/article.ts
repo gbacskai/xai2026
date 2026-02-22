@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, ElementRef, viewChild } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ElementRef, viewChild, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
 import { TelegramService } from '../../services/telegram.service';
@@ -10,6 +10,7 @@ import { ARTICLES } from '../../data/articles';
   imports: [RouterLink],
   templateUrl: './article.html',
   styleUrl: './article.scss',
+  encapsulation: ViewEncapsulation.None,
 })
 export class ArticlePage implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
