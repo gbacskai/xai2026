@@ -103,29 +103,50 @@ Different models consume tokens at different rates. Opus uses more tokens per re
   {
     id: 'remote-access',
     title: 'Remote Access',
-    subtitle: 'Connect directly to your workspace',
+    subtitle: 'SSH and SFTP access to your workspace',
     icon: '🔑',
     category: 'features',
     content: `
-Every xAI Workspace instance is your own dedicated machine. You can connect directly to manage files, run tools, and customise your environment.
+Every xAI Workspace instance is your own dedicated machine. You can connect via SSH or SFTP to manage files, run tools, and customise your environment.
 
-## Getting started
+## Getting your key
 
 1. Send \`/ssh\` in the Telegram chat
-2. The bot sends you a secure key file along with connection details
-3. Use the key to connect from your computer's terminal
+2. The bot sends you a \`.pem\` key file with connection details
+3. Save the file and set permissions before connecting
 
-## Connecting
+## SSH — Terminal access
 
 \`\`\`bash
-# Save the key file, then set permissions (required)
-chmod 600 openclaw.pem
+# Set permissions on the key file (required, one-time)
+chmod 600 <chatId>-xaiworkspace.pem
 
-# Connect to your workspace
-ssh -i openclaw.pem ubuntu@<your-host>
+# Connect via the bastion host
+ssh -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 \`\`\`
 
+Replace \`<chatId>\` with your Telegram chat ID (shown in the key filename).
+
 > If you get a "permission denied" error, double-check that you ran \`chmod 600\` on the key file.
+
+## SFTP — File transfer
+
+You can use any SFTP client to upload and download files:
+
+\`\`\`bash
+# Command-line SFTP
+sftp -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
+\`\`\`
+
+Or use a graphical client like **FileZilla**, **Cyberduck**, or **WinSCP**:
+
+| Setting | Value |
+|---|---|
+| **Protocol** | SFTP |
+| **Host** | ssh.xaiworkspace.com |
+| **Port** | 22 |
+| **Username** | xai\`<chatId>\` |
+| **Authentication** | Key file (.pem from \`/ssh\`) |
 
 ## What you can do
 
@@ -135,7 +156,7 @@ Once connected, your workspace is fully yours:
 - **Monitor activity** — view your agent's logs in real time
 - **Install tools** — add any software or runtimes you need
 - **Run automations** — set up scheduled tasks or background services
-- **Transfer files** — move files between your computer and workspace with \`scp\` or \`rsync\`
+- **Transfer files** — use \`scp\`, \`rsync\`, or SFTP to move files
 
 ## If your workspace is still setting up
 
@@ -143,10 +164,11 @@ If your workspace is still being provisioned, the bot will let you know. Wait a 
 
 ## Security
 
-- A unique encryption key is generated for each workspace during setup
+- All connections go through a **bastion host** — your instance is never directly exposed to the internet
+- A unique ed25519 encryption key is generated for each workspace during setup
 - Password login is disabled — only your personal key file works
 - Root access is restricted for safety
-- Your key is stored encrypted and only delivered to your Telegram chat
+- Your key is stored encrypted in S3 and only delivered to your Telegram chat
     `,
   },
   {

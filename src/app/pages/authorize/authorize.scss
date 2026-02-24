@@ -1,0 +1,138 @@
+.authorize {
+  padding-bottom: 32px;
+}
+
+.authorize-header {
+  text-align: center;
+  padding: 32px 24px 24px;
+  border-bottom: 0.5px solid rgba(128, 128, 128, 0.15);
+
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .authorize-sub {
+    font-size: 14px;
+    color: var(--tg-theme-hint-color);
+  }
+}
+
+.authorize-body {
+  padding: 24px 16px;
+  font-size: 15px;
+  line-height: 1.65;
+
+  :first-child {
+    margin-top: 0;
+  }
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 24px 0 8px;
+  }
+
+  p {
+    margin: 12px 0;
+  }
+
+  ul, ol {
+    padding-left: 24px;
+    margin: 12px 0;
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+
+  li {
+    margin: 6px 0;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    font-size: 13px;
+    background: rgba(128, 128, 128, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  code.cmd {
+    color: var(--tg-theme-link-color);
+  }
+
+  pre {
+    background: rgba(128, 128, 128, 0.08);
+    border-radius: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    margin: 12px 0;
+
+    code {
+      background: none;
+      padding: 0;
+      font-size: 13px;
+    }
+  }
+
+  blockquote {
+    border-left: 3px solid var(--tg-theme-link-color);
+    margin: 12px 0;
+    padding: 8px 16px;
+    color: var(--tg-theme-hint-color);
+    font-style: italic;
+  }
+
+  hr {
+    border: none;
+    border-top: 0.5px solid rgba(128, 128, 128, 0.15);
+    margin: 24px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+
+    th, td {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 0.5px solid rgba(128, 128, 128, 0.15);
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--tg-theme-section-header-text-color);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+  }
+}
+
+.authorize-footer {
+  text-align: center;
+  padding: 16px;
+
+  .back-link {
+    font-size: 14px;
+    color: var(--tg-theme-link-color);
+  }
+}
