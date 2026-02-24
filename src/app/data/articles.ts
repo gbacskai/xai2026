@@ -60,7 +60,7 @@ Just type anything! Try:
 - \`/models\` — Switch between AI models
 - \`/billing\` — Manage your subscription
 - \`/language\` — Change your preferred language
-- \`/ssh\` — Get SSH access to your instance
+- \`/ssh\` — Connect to your workspace for file access
 - \`/stop\` — Hibernate your instance when not in use
 - \`/help\` — See all available commands
     `,
@@ -101,21 +101,19 @@ Different models consume tokens at different rates. Opus uses more tokens per re
     `,
   },
   {
-    id: 'ssh-access',
-    title: 'SSH Access',
-    subtitle: 'Connect directly to your instance',
+    id: 'remote-access',
+    title: 'Remote Access',
+    subtitle: 'Connect directly to your workspace',
     icon: '🔑',
     category: 'features',
     content: `
-Every xAI Workspace instance comes with full SSH access — you own the machine.
+Every xAI Workspace instance is your own dedicated machine. You can connect directly to manage files, run tools, and customise your environment.
 
-## Getting your credentials
+## Getting started
 
 1. Send \`/ssh\` in the Telegram chat
-2. The bot sends you a \`.pem\` private key file along with connection details:
-   - **Host** — your instance's public IP
-   - **Port** — 22
-   - **User** — ubuntu
+2. The bot sends you a secure key file along with connection details
+3. Use the key to connect from your computer's terminal
 
 ## Connecting
 
@@ -123,36 +121,32 @@ Every xAI Workspace instance comes with full SSH access — you own the machine.
 # Save the key file, then set permissions (required)
 chmod 600 openclaw.pem
 
-# Connect
-ssh -i openclaw.pem ubuntu@<your-host-ip>
+# Connect to your workspace
+ssh -i openclaw.pem ubuntu@<your-host>
 \`\`\`
 
 > If you get a "permission denied" error, double-check that you ran \`chmod 600\` on the key file.
 
 ## What you can do
 
-Once connected you land in \`/home/ubuntu\` on your dedicated instance:
+Once connected, your workspace is fully yours:
 
-- Browse and edit your persisted files
-- Tail agent logs in real time
-- Install additional tools and runtimes
-- Run scripts, cron jobs, or services alongside your AI agent
-- Transfer files with \`scp\` or \`rsync\`
+- **Manage files** — browse, edit, upload, and download documents
+- **Monitor activity** — view your agent's logs in real time
+- **Install tools** — add any software or runtimes you need
+- **Run automations** — set up scheduled tasks or background services
+- **Transfer files** — move files between your computer and workspace with \`scp\` or \`rsync\`
 
-## When the key isn't ready
+## If your workspace is still setting up
 
-If your instance is still being provisioned, the bot will reply:
-
-> *"Failed to retrieve SSH key. Your instance may still be provisioning."*
-
-Wait a couple of minutes for setup to complete and try \`/ssh\` again.
+If your workspace is still being provisioned, the bot will let you know. Wait a couple of minutes and try \`/ssh\` again.
 
 ## Security
 
-- **Ed25519 keypair** — generated uniquely for each client during provisioning
-- **Key-only auth** — password authentication is disabled
-- **No root login** — \`PermitRootLogin\` is set to \`no\`
-- Your private key is stored encrypted in a private S3 bucket and only delivered to your Telegram chat
+- A unique encryption key is generated for each workspace during setup
+- Password login is disabled — only your personal key file works
+- Root access is restricted for safety
+- Your key is stored encrypted and only delivered to your Telegram chat
     `,
   },
   {
@@ -286,7 +280,7 @@ The \`/delete_my_data\` command removes:
 - Payment history
 - Usage logs and spend tracking
 - Your AI instance and all files on it
-- SSH keys and DNS records
+- Access keys and connection records
 
 This action is **permanent and cannot be undone**. You will be asked to confirm before deletion proceeds.
 
