@@ -48,7 +48,7 @@ export class AuthService {
     const tgLogin = (window as any).Telegram?.Login;
     if (tgLogin) {
       tgLogin.auth(
-        { bot_id: environment.botUsername, request_access: 'write' },
+        { bot_id: environment.botId, request_access: 'write' },
         (data: TelegramLoginUser | false) => {
           if (data) {
             this.login(data);

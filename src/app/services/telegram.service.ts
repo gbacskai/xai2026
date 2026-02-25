@@ -14,27 +14,29 @@ export class TelegramService {
   });
 
   init() {
-    if (!this.webapp) return;
-    this.webapp.ready();
-    this.webapp.expand();
+    if (!this.isTelegram) return;
+    this.webapp!.ready();
+    this.webapp!.expand();
 
-    this.webapp.onEvent('themeChanged', () => {
+    this.webapp!.onEvent('themeChanged', () => {
       this.colorScheme.set(this.webapp!.colorScheme);
     });
   }
 
   showBackButton(callback: () => void) {
-    if (!this.webapp) return;
-    this.webapp.BackButton.onClick(callback);
-    this.webapp.BackButton.show();
+    if (!this.isTelegram) return;
+    this.webapp!.BackButton.onClick(callback);
+    this.webapp!.BackButton.show();
   }
 
   hideBackButton() {
-    this.webapp?.BackButton.hide();
+    if (!this.isTelegram) return;
+    this.webapp!.BackButton.hide();
   }
 
   haptic(type: 'light' | 'medium' | 'heavy' = 'light') {
-    this.webapp?.HapticFeedback.impactOccurred(type);
+    if (!this.isTelegram) return;
+    this.webapp!.HapticFeedback.impactOccurred(type);
   }
 
   showAlert(message: string, callback?: () => void) {
