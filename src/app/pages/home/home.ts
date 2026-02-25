@@ -1,11 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TelegramService } from '../../services/telegram.service';
 import { ARTICLES, Article } from '../../data/articles';
 
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -26,13 +27,4 @@ export class HomePage implements OnInit {
     this.router.navigate(['/article', article.id]);
   }
 
-  openPrivacy() {
-    this.tg.haptic();
-    this.router.navigate(['/privacy']);
-  }
-
-  openTerms() {
-    this.tg.haptic();
-    this.router.navigate(['/terms']);
-  }
 }
