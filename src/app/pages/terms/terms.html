@@ -1,3 +1,5 @@
+<app-back-button />
+
 <div class="terms">
   <div class="terms-header">
     <h1>{{ i18n.t('terms.title') }}</h1>
@@ -5,9 +7,4 @@
   </div>
 
   <div class="terms-body" [innerHTML]="html"></div>
-
-  <!-- Back link for desktop/web (no Telegram BackButton) -->
-  <div class="terms-footer">
-    <a href="/" class="back-link">{{ i18n.t('back') }}</a>
-  </div>
 </div>

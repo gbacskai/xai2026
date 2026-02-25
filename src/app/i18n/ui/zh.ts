@@ -18,4 +18,11 @@ export const ZH: UiStrings = {
   'authorize.title': '连接服务',
   'authorize.subtitle': '使用 /authorize 和自定义 OAuth',
   'back': '\u2190 返回',
+  'chat.placeholder': '输入消息...',
+  'chat.send': '发送',
+  'chat.connecting': '连接中...',
+  'chat.connected': '已连接',
+  'chat.empty': '发送消息开始与 xAI Bot 聊天',
+  'chat.loginButton': '使用 Telegram 登录',
+  'chat.loginHint': '登录后即可与 AI 助手聊天',
 };

@@ -3,7 +3,7 @@ import { Injectable, signal, computed } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class TelegramService {
   private readonly webapp = window.Telegram?.WebApp;
-  readonly isTelegram = !!this.webapp;
+  readonly isTelegram = !!this.webapp?.initData;
   readonly user = signal(this.webapp?.initDataUnsafe?.user ?? null);
   readonly colorScheme = signal<'light' | 'dark'>(this.webapp?.colorScheme ?? 'light');
   readonly startParam = signal(this.webapp?.initDataUnsafe?.start_param ?? null);

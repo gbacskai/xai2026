@@ -18,4 +18,11 @@ export const FR: UiStrings = {
   'authorize.title': 'Connecter des services',
   'authorize.subtitle': 'Utiliser /authorize et OAuth personnalis\u00e9',
   'back': '\u2190 Retour',
+  'chat.placeholder': '\u00c9crire un message...',
+  'chat.send': 'Envoyer',
+  'chat.connecting': 'Connexion...',
+  'chat.connected': 'Connect\u00e9',
+  'chat.empty': 'Envoyez un message pour discuter avec xAI Bot',
+  'chat.loginButton': 'Se connecter avec Telegram',
+  'chat.loginHint': 'Connectez-vous pour discuter avec notre assistant IA',
 };

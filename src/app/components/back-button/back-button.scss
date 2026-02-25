@@ -1,0 +1,31 @@
+.back-bar {
+  padding: 12px 16px 0;
+}
+
+.back-bar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--tg-theme-link-color);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.back-bar-arrow {
+  font-size: 16px;
+}
+
+:host-context([dir="rtl"]) {
+  .back-bar-link {
+    direction: rtl;
+  }
+
+  .back-bar-arrow {
+    transform: scaleX(-1);
+  }
+}

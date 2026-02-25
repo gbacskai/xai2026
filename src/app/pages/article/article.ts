@@ -1,13 +1,14 @@
 import { Component, inject, OnInit, OnDestroy, signal, ViewEncapsulation } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { marked } from 'marked';
 import { TelegramService } from '../../services/telegram.service';
 import { I18nService } from '../../i18n/i18n.service';
+import { BackButtonComponent } from '../../components/back-button/back-button';
 
 @Component({
   selector: 'app-article',
   standalone: true,
-  imports: [RouterLink],
+  imports: [BackButtonComponent],
   templateUrl: './article.html',
   styleUrl: './article.scss',
   encapsulation: ViewEncapsulation.None,

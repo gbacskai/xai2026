@@ -206,10 +206,6 @@ Troque com \`/models\`.
 ## Monitore o uso
 
 Verifique \`/usage\` regularmente para acompanhar seu consumo de tokens. A barra de progresso mostra sua cota mensal.
-
-## Hibernação
-
-Sua instância hiberna automaticamente quando fica ociosa para economizar recursos. Basta enviar qualquer mensagem para reativá-la — leva cerca de 30 segundos. Você também pode hibernar manualmente com \`/stop\`.
     `,
   },
   'language-region': {

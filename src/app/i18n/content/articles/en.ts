@@ -206,10 +206,6 @@ Switch with \`/models\`.
 ## Monitor usage
 
 Check \`/usage\` regularly to track your token consumption. The progress bar shows your monthly allocation.
-
-## Hibernation
-
-Your instance hibernates automatically when idle to save resources. Just send any message to wake it up — it takes about 30 seconds. You can also manually hibernate with \`/stop\`.
     `,
   },
   'language-region': {

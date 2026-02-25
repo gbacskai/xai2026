@@ -24,6 +24,13 @@ export interface UiStrings {
   'authorize.title': string;
   'authorize.subtitle': string;
   'back': string;
+  'chat.placeholder': string;
+  'chat.send': string;
+  'chat.connecting': string;
+  'chat.connected': string;
+  'chat.empty': string;
+  'chat.loginButton': string;
+  'chat.loginHint': string;
 }
 
 export interface LocalizedArticle {

@@ -206,10 +206,6 @@ Cambia con \`/models\`.
 ## Controla el uso
 
 Revisa \`/usage\` regularmente para seguir tu consumo de tokens. La barra de progreso muestra tu asignación mensual.
-
-## Hibernación
-
-Tu instancia hiberna automáticamente cuando está inactiva para ahorrar recursos. Basta con enviar cualquier mensaje para despertarla — tarda unos 30 segundos. También puedes hibernarla manualmente con \`/stop\`.
     `,
   },
   'language-region': {

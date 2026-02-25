@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TelegramService } from '../../services/telegram.service';
+import { AuthService } from '../../services/auth.service';
 import { I18nService, LOCALE_LABELS } from '../../i18n/i18n.service';
 import { FullArticle, SupportedLocale, SUPPORTED_LOCALES } from '../../i18n/i18n.types';
 
@@ -14,6 +15,7 @@ import { FullArticle, SupportedLocale, SUPPORTED_LOCALES } from '../../i18n/i18n
 export class HomePage implements OnInit {
   private router = inject(Router);
   tg = inject(TelegramService);
+  auth = inject(AuthService);
   i18n = inject(I18nService);
 
   locales = SUPPORTED_LOCALES;
@@ -41,5 +43,9 @@ export class HomePage implements OnInit {
     this.tg.haptic();
     this.i18n.setLocale(loc);
     this.langOpen.set(false);
+  }
+
+  loginWithTelegram() {
+    this.auth.openTelegramLogin();
   }
 }

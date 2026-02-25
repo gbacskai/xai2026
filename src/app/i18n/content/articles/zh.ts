@@ -206,10 +206,6 @@ sftp -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 ## 监控用量
 
 定期查看 \`/usage\`，跟踪您的 Token 消耗情况。进度条显示本月的配额使用进度。
-
-## 休眠机制
-
-实例在空闲时会自动休眠以节省资源。发送任意消息即可唤醒，大约需要 30 秒。您也可以通过 \`/stop\` 手动休眠。
     `,
   },
   'language-region': {

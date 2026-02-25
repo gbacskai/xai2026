@@ -3,11 +3,12 @@ import { Router } from '@angular/router';
 import { marked } from 'marked';
 import { TelegramService } from '../../services/telegram.service';
 import { I18nService } from '../../i18n/i18n.service';
+import { BackButtonComponent } from '../../components/back-button/back-button';
 
 @Component({
   selector: 'app-privacy',
   standalone: true,
-  imports: [],
+  imports: [BackButtonComponent],
   templateUrl: './privacy.html',
   styleUrl: './privacy.scss',
 })

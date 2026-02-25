@@ -39,6 +39,15 @@ body {
       background: var(--tg-theme-bg-color);
       box-shadow: 0 0 40px rgba(0, 0, 0, 0.12);
     }
+
+    // When chat is active, the shadow wraps both columns
+    app-root.has-chat .content-frame {
+      background: var(--tg-theme-bg-color);
+    }
+
+    app-root.has-chat .chat-frame {
+      background: var(--tg-theme-bg-color);
+    }
   }
 }
 

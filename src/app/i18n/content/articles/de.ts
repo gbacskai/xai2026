@@ -206,10 +206,6 @@ Wechseln mit \`/models\`.
 ## Verbrauch überwachen
 
 Prüfe regelmäßig \`/usage\`, um deinen Token-Verbrauch zu verfolgen. Der Fortschrittsbalken zeigt dein monatliches Kontingent.
-
-## Ruhezustand
-
-Deine Instanz geht automatisch in den Ruhezustand, wenn sie inaktiv ist, um Ressourcen zu sparen. Sende einfach eine Nachricht, um sie aufzuwecken — das dauert etwa 30 Sekunden. Du kannst sie auch manuell mit \`/stop\` in den Ruhezustand versetzen.
     `,
   },
   'language-region': {

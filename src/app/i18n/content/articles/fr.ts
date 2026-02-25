@@ -206,10 +206,6 @@ Changez avec \`/models\`.
 ## Surveiller votre consommation
 
 Consultez régulièrement \`/usage\` pour suivre votre consommation de tokens. La barre de progression indique votre allocation mensuelle.
-
-## Hibernation
-
-Votre instance se met en hibernation automatiquement lorsqu'elle est inactive, afin d'économiser des ressources. Envoyez n'importe quel message pour la réveiller — cela prend environ 30 secondes. Vous pouvez aussi la mettre en hibernation manuellement avec \`/stop\`.
     `,
   },
   'language-region': {

@@ -1,3 +1,5 @@
+<app-back-button />
+
 <div class="article">
   <div class="article-header">
     <span class="article-icon">{{ icon() }}</span>
@@ -6,9 +8,4 @@
   </div>
 
   <div class="article-body" [innerHTML]="html()" (click)="onBodyClick($event)"></div>
-
-  <!-- Back link for desktop/web (no Telegram BackButton) -->
-  <div class="article-footer">
-    <a routerLink="/" class="back-link">{{ i18n.t('article.back') }}</a>
-  </div>
 </div>
