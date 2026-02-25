@@ -21,11 +21,12 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   private prevMessageCount = 0;
 
   ngOnInit() {
-    this.chat.connect();
+    // TODO: enable when chat.xaiworkspace.com is live
+    // this.chat.connect();
   }
 
   ngOnDestroy() {
-    this.chat.disconnect();
+    // this.chat.disconnect();
   }
 
   ngAfterViewChecked() {

@@ -33,9 +33,17 @@ export class ChatService {
 
     this.connectionState.set('connecting');
 
-    this.ws = new WebSocket(environment.wsUrl);
+    let wasConnected = false;
+
+    try {
+      this.ws = new WebSocket(environment.wsUrl);
+    } catch {
+      this.connectionState.set('error');
+      return;
+    }
 
     this.ws.onopen = () => {
+      wasConnected = true;
       this.connectionState.set('connected');
       this.reconnectAttempts = 0;
       this.ws!.send(JSON.stringify({ type: 'auth', ...payload }));
@@ -57,7 +65,10 @@ export class ChatService {
 
     this.ws.onclose = () => {
       this.connectionState.set('disconnected');
-      this.scheduleReconnect();
+      // Only reconnect if we had a successful connection before
+      if (wasConnected) {
+        this.scheduleReconnect();
+      }
     };
 
     this.ws.onerror = () => {

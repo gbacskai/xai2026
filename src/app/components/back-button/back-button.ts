@@ -11,7 +11,6 @@ import { I18nService } from '../../i18n/i18n.service';
     @if (!tg.isTelegram) {
       <div class="back-bar">
         <a routerLink="/" class="back-bar-link">
-          <span class="back-bar-arrow">&#8592;</span>
           {{ i18n.t('back') }}
         </a>
       </div>

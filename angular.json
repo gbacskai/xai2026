@@ -81,6 +81,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": [".ngrok-free.dev"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "xaiworkspace:build:production"
