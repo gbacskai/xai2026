@@ -43,7 +43,6 @@ body {
     // When chat is active, the shadow wraps both columns
     app-root.has-chat .content-frame {
       background: var(--tg-theme-bg-color);
-      border-right: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     app-root.has-chat .chat-frame {

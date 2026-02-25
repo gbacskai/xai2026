@@ -11,16 +11,14 @@ import { ChatPanelComponent } from './components/chat-panel/chat-panel';
   imports: [RouterOutlet, ChatPanelComponent],
   template: `
     <div class="content-frame" [class.content-frame--collapsed]="sidebarCollapsed()">
-      @if (showChat()) {
-        <button class="collapse-btn" (click)="toggleSidebar()" aria-label="Toggle sidebar">
-          {{ sidebarCollapsed() ? '›' : '‹' }}
-        </button>
-      }
       @if (!sidebarCollapsed()) {
         <router-outlet />
       }
     </div>
     @if (showChat()) {
+      <button class="collapse-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <span class="collapse-toggle-icon">{{ sidebarCollapsed() ? '›' : '‹' }}</span>
+      </button>
       <app-chat-panel
         class="chat-frame"
         [class.chat-frame--open]="chat.isOpen()"
@@ -65,43 +63,42 @@ import { ChatPanelComponent } from './components/chat-panel/chat-panel';
 
     .content-frame--collapsed {
       @media (min-width: 861px) {
-        flex: 0 0 40px;
-        max-width: 40px;
-        min-width: 40px;
+        flex: 0 0 0px;
+        max-width: 0px;
+        min-width: 0px;
         overflow: hidden;
       }
     }
 
-    .collapse-btn {
+    .collapse-toggle {
       display: none;
 
       @media (min-width: 861px) {
         display: flex;
-        position: absolute;
-        top: 12px;
-        right: 8px;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        background: var(--tg-theme-section-bg-color);
-        color: var(--tg-theme-hint-color);
-        font-size: 16px;
-        cursor: pointer;
+        flex: 0 0 auto;
         align-items: center;
         justify-content: center;
-        z-index: 10;
-        transition: background 0.15s;
+        width: 20px;
+        background: var(--tg-theme-secondary-bg-color);
+        border: none;
+        border-left: 1px solid rgba(0, 0, 0, 0.08);
+        border-right: 1px solid rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        padding: 0;
+        color: var(--tg-theme-hint-color);
+        transition: background 0.15s, color 0.15s;
 
         &:hover {
-          background: var(--tg-theme-secondary-bg-color);
+          background: var(--tg-theme-button-color);
+          color: var(--tg-theme-button-text-color);
         }
       }
     }
 
-    .content-frame--collapsed .collapse-btn {
-      right: auto;
-      left: 6px;
+    .collapse-toggle-icon {
+      font-size: 16px;
+      font-weight: bold;
+      line-height: 1;
     }
 
     .chat-frame {
