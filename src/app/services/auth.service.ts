@@ -11,10 +11,33 @@ export interface TelegramLoginUser {
   hash: string;
 }
 
+export interface GoogleUser {
+  provider: 'google';
+  code: string;
+  email: string;
+  name: string;
+  picture?: string;
+}
+
+export interface GitHubUser {
+  provider: 'github';
+  code: string;
+}
+
+declare const google: any;
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly webUser = signal<TelegramLoginUser | null>(null);
-  readonly isAuthenticated = computed(() => !!this.webUser());
+  readonly googleUser = signal<GoogleUser | null>(null);
+  readonly githubUser = signal<GitHubUser | null>(null);
+  readonly isAuthenticated = computed(() => !!this.webUser() || !!this.googleUser() || !!this.githubUser());
+  readonly currentProvider = computed<'telegram' | 'google' | 'github' | null>(() => {
+    if (this.githubUser()) return 'github';
+    if (this.googleUser()) return 'google';
+    if (this.webUser()) return 'telegram';
+    return null;
+  });
 
   private readonly botId = environment.botId;
 
@@ -23,6 +46,18 @@ export class AuthService {
     if (stored) {
       try {
         this.webUser.set(JSON.parse(stored));
+      } catch { /* ignore corrupt data */ }
+    }
+    const googleStored = sessionStorage.getItem('google_user');
+    if (googleStored) {
+      try {
+        this.googleUser.set(JSON.parse(googleStored));
+      } catch { /* ignore corrupt data */ }
+    }
+    const githubStored = sessionStorage.getItem('github_user');
+    if (githubStored) {
+      try {
+        this.githubUser.set(JSON.parse(githubStored));
       } catch { /* ignore corrupt data */ }
     }
   }
@@ -34,15 +69,41 @@ export class AuthService {
 
   logout(): void {
     this.webUser.set(null);
+    this.googleUser.set(null);
+    this.githubUser.set(null);
     sessionStorage.removeItem('tg_web_user');
+    sessionStorage.removeItem('google_user');
+    sessionStorage.removeItem('github_user');
   }
 
-  getAuthPayload(): TelegramLoginUser | null {
+  logoutProvider(provider: string): void {
+    if (provider === 'telegram') {
+      this.webUser.set(null);
+      sessionStorage.removeItem('tg_web_user');
+    } else if (provider === 'google') {
+      this.googleUser.set(null);
+      sessionStorage.removeItem('google_user');
+    } else if (provider === 'github') {
+      this.githubUser.set(null);
+      sessionStorage.removeItem('github_user');
+    }
+  }
+
+  getAuthPayload(): (TelegramLoginUser | { type: 'auth'; provider: 'google'; code: string } | { type: 'auth'; provider: 'github'; code: string }) | null {
+    const gh = this.githubUser();
+    if (gh) return { type: 'auth', provider: 'github', code: gh.code };
+    const g = this.googleUser();
+    if (g) return { type: 'auth', provider: 'google', code: g.code };
     return this.webUser();
   }
 
+  getGoogleAuthPayload(): { provider: 'google'; code: string } | null {
+    const g = this.googleUser();
+    if (!g) return null;
+    return { provider: 'google', code: g.code };
+  }
+
   openTelegramLogin(): void {
-    // Use the Telegram Login Widget's programmatic API
     const tgLogin = (window as any).Telegram?.Login;
     if (tgLogin) {
       tgLogin.auth(
@@ -54,5 +115,59 @@ export class AuthService {
         },
       );
     }
+  }
+
+  loginWithGoogle(): void {
+    if (typeof google === 'undefined' || !google.accounts?.oauth2) return;
+    const clientId = environment.googleClientId;
+    if (!clientId) return;
+
+    const codeClient = google.accounts.oauth2.initCodeClient({
+      client_id: clientId,
+      scope: 'openid email profile https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar',
+      ux_mode: 'popup',
+      callback: (response: { code: string; error?: string }) => {
+        if (response.error || !response.code) return;
+        // We only have the auth code — email/name will come from the backend after token exchange.
+        // Store a minimal GoogleUser so the WS auth payload can be built.
+        const user: GoogleUser = {
+          provider: 'google',
+          code: response.code,
+          email: '',
+          name: '',
+        };
+        this.googleUser.set(user);
+        sessionStorage.setItem('google_user', JSON.stringify(user));
+      },
+    });
+    codeClient.requestCode();
+  }
+
+  loginWithGithub(): void {
+    const routerUrl = environment.routerUrl;
+    if (!routerUrl) return;
+
+    const popup = window.open(
+      `${routerUrl}/auth/github/start`,
+      'github_auth',
+      'width=600,height=700,left=200,top=100',
+    );
+
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'github_auth' && event.data.code) {
+        window.removeEventListener('message', handler);
+        const user: GitHubUser = { provider: 'github', code: event.data.code };
+        this.githubUser.set(user);
+        sessionStorage.setItem('github_user', JSON.stringify(user));
+      }
+    };
+    window.addEventListener('message', handler);
+  }
+
+  hasLinkedProvider(provider: 'telegram' | 'google' | 'github'): boolean {
+    if (provider === 'telegram') return !!this.webUser();
+    if (provider === 'google') return !!this.googleUser();
+    if (provider === 'github') return !!this.githubUser();
+    return false;
   }
 }

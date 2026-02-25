@@ -13,6 +13,24 @@
         }
       </span>
     </div>
+    @if (chat.sessions().length > 1) {
+      <div class="account-switcher">
+        <button class="account-switcher-btn" (click)="toggleAccountMenu()">
+          {{ currentAccountLabel() }} <span class="caret">&#9662;</span>
+        </button>
+        @if (accountMenuOpen()) {
+          <div class="account-switcher-menu">
+            @for (s of chat.sessions(); track s.chatId) {
+              <button class="account-item"
+                [class.active]="s.chatId === chat.currentChatId()"
+                (click)="selectAccount(s.chatId)">
+                {{ s.chatId }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
     <button class="chat-close" (click)="chat.toggle()" aria-label="Close chat">&times;</button>
   </div>
 
@@ -22,7 +40,25 @@
         [class.chat-bubble--user]="msg.sender === 'user'"
         [class.chat-bubble--bot]="msg.sender === 'bot'"
         [class.chat-bubble--system]="msg.sender === 'system'">
-        {{ msg.text }}
+        <span class="chat-bubble-text">{{ msg.text }}</span>
+        @if (msg.buttons) {
+          <div class="chat-buttons">
+            @for (row of msg.buttons; track $index) {
+              <div class="chat-button-row">
+                @for (btn of row; track btn.text) {
+                  @if (btn.url) {
+                    <a class="chat-btn chat-btn--url" [href]="btn.url" target="_blank" rel="noopener">{{ btn.text }}</a>
+                  } @else if (btn.callback_data) {
+                    <button class="chat-btn chat-btn--action" (click)="onCallback(btn.callback_data!)">{{ btn.text }}</button>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+        @if (msg.file) {
+          <button class="chat-btn chat-btn--file" (click)="downloadFile(msg.file!)">{{ msg.file.name }}</button>
+        }
       </div>
     }
     @if (chat.messages().length === 0) {

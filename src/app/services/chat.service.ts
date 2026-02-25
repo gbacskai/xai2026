@@ -3,11 +3,25 @@ import { TelegramService } from './telegram.service';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 
+export interface InlineButton {
+  text: string;
+  callback_data?: string;
+  url?: string;
+}
+
+export interface FileAttachment {
+  name: string;
+  data: string;  // base64
+  mime: string;
+}
+
 export interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot' | 'system';
   timestamp: number;
+  buttons?: InlineButton[][];   // rows of buttons
+  file?: FileAttachment;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -23,6 +37,17 @@ export class ChatService {
   readonly messages = signal<ChatMessage[]>([]);
   readonly connectionState = signal<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   readonly isOpen = signal(false);
+  readonly linkCode = signal<{ code: string; botUrl: string } | null>(null);
+  readonly linkedProviders = signal<{ provider: string; email?: string; displayName?: string }[]>([]);
+  readonly sessions = signal<{ chatId: string; sessionToken: string; provider: string }[]>([]);
+  readonly currentChatId = signal<string>('');
+
+  constructor() {
+    const stored = sessionStorage.getItem('chat_sessions');
+    if (stored) {
+      try { this.sessions.set(JSON.parse(stored)); } catch { /* ignore */ }
+    }
+  }
 
   connect(): void {
     if (this.tg.isTelegram) return;
@@ -44,7 +69,12 @@ export class ChatService {
 
     this.ws.onopen = () => {
       // Send auth immediately on connect
-      this.ws!.send(JSON.stringify({ type: 'auth', ...payload }));
+      // Google and GitHub payloads already have type: 'auth' set; Telegram payloads do not.
+      if (payload && 'type' in payload && (payload as any).type === 'auth') {
+        this.ws!.send(JSON.stringify(payload));
+      } else {
+        this.ws!.send(JSON.stringify({ type: 'auth', ...payload }));
+      }
     };
 
     this.ws.onmessage = (event) => {
@@ -56,6 +86,14 @@ export class ChatService {
           authenticated = true;
           this.connectionState.set('connected');
           this.reconnectAttempts = 0;
+          if (msg.chatId && msg.sessionToken) {
+            this.currentChatId.set(msg.chatId);
+            this.sessions.update(list => {
+              const filtered = list.filter(s => s.chatId !== msg.chatId);
+              return [...filtered, { chatId: msg.chatId, sessionToken: msg.sessionToken, provider: msg.provider || '' }];
+            });
+            sessionStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          }
           return;
         }
 
@@ -70,6 +108,59 @@ export class ChatService {
           return;
         }
 
+        // Handle status messages (auto-wake progress)
+        if (msg.type === 'status') {
+          this.connectionState.set('connecting');
+          this.messages.update(msgs => [...msgs, {
+            id: crypto.randomUUID(),
+            text: msg.message || 'Starting...',
+            sender: 'system',
+            timestamp: Date.now(),
+          }]);
+          return;
+        }
+
+        // Handle link code response
+        if (msg.type === 'link_code') {
+          this.linkCode.set({ code: msg.code, botUrl: msg.botUrl });
+          return;
+        }
+
+        // Handle link success
+        if (msg.type === 'link_success') {
+          this.messages.update(msgs => [...msgs, {
+            id: crypto.randomUUID(),
+            text: 'Account linked!',
+            sender: 'system',
+            timestamp: Date.now(),
+          }]);
+          // Refresh linked providers
+          this.requestAuthLinks();
+          return;
+        }
+
+        // Handle account_found (linking discovered another account)
+        if (msg.type === 'account_found') {
+          this.sessions.update(list => {
+            const filtered = list.filter(s => s.chatId !== msg.chatId);
+            return [...filtered, { chatId: msg.chatId, sessionToken: msg.sessionToken, provider: '' }];
+          });
+          sessionStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          this.messages.update(msgs => [...msgs, {
+            id: crypto.randomUUID(),
+            text: 'Another account found — use the account switcher to access it.',
+            sender: 'system',
+            timestamp: Date.now(),
+          }]);
+          return;
+        }
+
+        // Handle auth links list
+        if (msg.type === 'auth_links') {
+          this.linkedProviders.set(msg.links || []);
+          return;
+        }
+
         // Handle chat messages
         if (msg.type === 'message' || msg.type === 'chat') {
           this.messages.update(msgs => [...msgs, {
@@ -77,6 +168,8 @@ export class ChatService {
             text: msg.text ?? msg.payload?.text ?? '',
             sender: msg.sender ?? 'bot',
             timestamp: msg.timestamp ?? Date.now(),
+            buttons: msg.buttons,
+            file: msg.file,
           }]);
         }
       } catch { /* ignore malformed messages */ }
@@ -93,6 +186,12 @@ export class ChatService {
     this.ws.onerror = () => {
       this.connectionState.set('error');
     };
+  }
+
+  sendCallback(data: string): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'callback', data }));
+    }
   }
 
   send(text: string): void {
@@ -123,8 +222,124 @@ export class ChatService {
     this.connectionState.set('disconnected');
   }
 
+  switchAccount(targetChatId: string): void {
+    const session = this.sessions().find(s => s.chatId === targetChatId);
+    if (!session) return;
+    this.disconnect();
+    this.messages.set([]);
+    this.connectionState.set('connecting');
+    this.reconnectAttempts = 0;
+
+    try {
+      this.ws = new WebSocket(environment.wsUrl);
+    } catch {
+      this.connectionState.set('error');
+      return;
+    }
+
+    let authenticated = false;
+
+    this.ws.onopen = () => {
+      this.ws!.send(JSON.stringify({ type: 'auth', sessionToken: session.sessionToken }));
+    };
+
+    this.ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'auth_ok') {
+          authenticated = true;
+          this.connectionState.set('connected');
+          if (msg.chatId && msg.sessionToken) {
+            this.currentChatId.set(msg.chatId);
+            this.sessions.update(list => {
+              const filtered = list.filter(s => s.chatId !== msg.chatId);
+              return [...filtered, { chatId: msg.chatId, sessionToken: msg.sessionToken, provider: msg.provider || '' }];
+            });
+            sessionStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          }
+          return;
+        }
+        if (msg.type === 'auth_error') {
+          this.connectionState.set('error');
+          this.messages.update(msgs => [...msgs, {
+            id: crypto.randomUUID(),
+            text: msg.error || 'Session expired. Please log in again.',
+            sender: 'system',
+            timestamp: Date.now(),
+          }]);
+          // Remove expired session
+          this.sessions.update(list => list.filter(s => s.chatId !== targetChatId));
+          sessionStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          return;
+        }
+        if (msg.type === 'status') {
+          this.connectionState.set('connecting');
+          this.messages.update(msgs => [...msgs, {
+            id: crypto.randomUUID(),
+            text: msg.message || 'Starting...',
+            sender: 'system',
+            timestamp: Date.now(),
+          }]);
+          return;
+        }
+        if (msg.type === 'account_found') {
+          this.sessions.update(list => {
+            const filtered = list.filter(s => s.chatId !== msg.chatId);
+            return [...filtered, { chatId: msg.chatId, sessionToken: msg.sessionToken, provider: '' }];
+          });
+          sessionStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          return;
+        }
+        if (msg.type === 'link_code') { this.linkCode.set({ code: msg.code, botUrl: msg.botUrl }); return; }
+        if (msg.type === 'link_success') {
+          this.messages.update(msgs => [...msgs, { id: crypto.randomUUID(), text: 'Account linked!', sender: 'system', timestamp: Date.now() }]);
+          this.requestAuthLinks();
+          return;
+        }
+        if (msg.type === 'auth_links') { this.linkedProviders.set(msg.links || []); return; }
+        if (msg.type === 'message' || msg.type === 'chat') {
+          this.messages.update(msgs => [...msgs, {
+            id: msg.id ?? crypto.randomUUID(),
+            text: msg.text ?? msg.payload?.text ?? '',
+            sender: msg.sender ?? 'bot',
+            timestamp: msg.timestamp ?? Date.now(),
+            buttons: msg.buttons,
+            file: msg.file,
+          }]);
+        }
+      } catch { /* ignore malformed messages */ }
+    };
+
+    this.ws.onclose = () => {
+      this.connectionState.set('disconnected');
+      if (authenticated) this.scheduleReconnect();
+    };
+
+    this.ws.onerror = () => {
+      this.connectionState.set('error');
+    };
+  }
+
   toggle(): void {
     this.isOpen.update(v => !v);
+  }
+
+  sendLinkRequest(target: 'telegram'): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'link', target }));
+    }
+  }
+
+  sendLinkProvider(provider: string, data: Record<string, unknown>): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'link_provider', provider, ...data }));
+    }
+  }
+
+  requestAuthLinks(): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'get_auth_links' }));
+    }
   }
 
   private scheduleReconnect(): void {

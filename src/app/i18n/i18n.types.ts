@@ -31,7 +31,13 @@ export interface UiStrings {
   'chat.connected': string;
   'chat.empty': string;
   'chat.loginButton': string;
+  'chat.loginTelegram': string;
+  'chat.loginGoogle': string;
+  'chat.loginDivider': string;
   'chat.loginHint': string;
+  'chat.linkTelegram': string;
+  'chat.linkGoogle': string;
+  'chat.linkSuccess': string;
   'chat.disconnected': string;
   'footer.logout': string;
   'invite.title': string;

@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ChatService } from '../../services/chat.service';
+import { ChatService, FileAttachment } from '../../services/chat.service';
 import { I18nService } from '../../i18n/i18n.service';
 
 @Component({
@@ -19,6 +19,21 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messageList') messageList!: ElementRef<HTMLDivElement>;
 
   private prevMessageCount = 0;
+
+  accountMenuOpen = signal(false);
+  currentAccountLabel = computed(() => {
+    const id = this.chat.currentChatId();
+    return id ? (id.startsWith('w_') ? id.substring(0, 10) : id) : 'Account';
+  });
+
+  toggleAccountMenu(): void {
+    this.accountMenuOpen.update(v => !v);
+  }
+
+  selectAccount(chatId: string): void {
+    this.accountMenuOpen.set(false);
+    this.chat.switchAccount(chatId);
+  }
 
   ngOnInit() {
     this.chat.connect();
@@ -48,6 +63,21 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
       event.preventDefault();
       this.send();
     }
+  }
+
+  onCallback(data: string): void {
+    this.chat.sendCallback(data);
+  }
+
+  downloadFile(file: FileAttachment): void {
+    const bytes = Uint8Array.from(atob(file.data), c => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: file.mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   private scrollToBottom(): void {

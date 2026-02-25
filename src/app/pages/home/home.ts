@@ -2,6 +2,7 @@ import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TelegramService } from '../../services/telegram.service';
 import { AuthService } from '../../services/auth.service';
+import { ChatService } from '../../services/chat.service';
 import { I18nService, LOCALE_LABELS } from '../../i18n/i18n.service';
 import { FullArticle, SupportedLocale, SUPPORTED_LOCALES } from '../../i18n/i18n.types';
 
@@ -14,6 +15,7 @@ import { FullArticle, SupportedLocale, SUPPORTED_LOCALES } from '../../i18n/i18n
 })
 export class HomePage implements OnInit {
   private router = inject(Router);
+  private chat = inject(ChatService);
   tg = inject(TelegramService);
   auth = inject(AuthService);
   i18n = inject(I18nService);
@@ -22,6 +24,14 @@ export class HomePage implements OnInit {
   localeLabels = LOCALE_LABELS;
   langOpen = signal(false);
   isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  linkedProviders = computed(() => {
+    const list: { key: string; label: string }[] = [];
+    if (this.auth.webUser()) list.push({ key: 'telegram', label: 'Telegram' });
+    if (this.auth.googleUser()) list.push({ key: 'google', label: 'Google' });
+    if (this.auth.githubUser()) list.push({ key: 'github', label: 'GitHub' });
+    return list;
+  });
 
   gettingStarted = computed(() => this.i18n.articles().filter(a => a.category === 'getting-started'));
   features = computed(() => this.i18n.articles().filter(a => a.category === 'features'));
@@ -50,7 +60,45 @@ export class HomePage implements OnInit {
     this.auth.openTelegramLogin();
   }
 
-  logout() {
-    this.auth.logout();
+  loginWithGoogle() {
+    this.auth.loginWithGoogle();
+  }
+
+  loginWithGithub() {
+    this.auth.loginWithGithub();
+  }
+
+  linkTelegram() {
+    this.chat.sendLinkRequest('telegram');
+  }
+
+  linkGoogle() {
+    this.auth.loginWithGoogle();
+    const check = () => {
+      const g = this.auth.getGoogleAuthPayload();
+      if (g) {
+        this.chat.sendLinkProvider('google', { code: g.code });
+      } else {
+        setTimeout(check, 500);
+      }
+    };
+    setTimeout(check, 1000);
+  }
+
+  linkGithub() {
+    this.auth.loginWithGithub();
+    const check = () => {
+      const gh = this.auth.githubUser();
+      if (gh) {
+        this.chat.sendLinkProvider('github', { code: gh.code });
+      } else {
+        setTimeout(check, 500);
+      }
+    };
+    setTimeout(check, 1000);
+  }
+
+  logoutProvider(provider: string) {
+    this.auth.logoutProvider(provider);
   }
 }
