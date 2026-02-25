@@ -24,22 +24,17 @@
   }
 }
 
-.invite-banner {
+.invite-banner--warning {
   margin: 0 16px 16px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: var(--tg-theme-secondary-bg-color);
+  background: rgba(220, 38, 38, 0.1);
   text-align: center;
 
-  .invite-icon {
-    font-size: 24px;
-    display: block;
-    margin-bottom: 6px;
-  }
-
   p {
-    font-size: 14px;
-    color: var(--tg-theme-hint-color);
+    font-size: 15px;
+    font-weight: 600;
+    color: #dc2626;
     line-height: 1.5;
     margin: 0;
   }
