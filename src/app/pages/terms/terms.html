@@ -1,13 +1,13 @@
 <div class="terms">
   <div class="terms-header">
-    <h1>Terms of Service</h1>
-    <p class="terms-sub">Last updated: February 2026</p>
+    <h1>{{ i18n.t('terms.title') }}</h1>
+    <p class="terms-sub">{{ i18n.t('terms.lastUpdated') }}</p>
   </div>
 
   <div class="terms-body" [innerHTML]="html"></div>
 
   <!-- Back link for desktop/web (no Telegram BackButton) -->
   <div class="terms-footer">
-    <a href="/" class="back-link">← Back</a>
+    <a href="/" class="back-link">{{ i18n.t('back') }}</a>
   </div>
 </div>

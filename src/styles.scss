@@ -83,6 +83,24 @@ a {
   }
 }
 
+// RTL support for Arabic
+[dir="rtl"] {
+  .card-item:not(:last-child) {
+    margin-left: 0;
+    margin-right: 52px;
+    padding-left: 16px;
+    padding-right: 0;
+  }
+
+  .card-chevron {
+    transform: scaleX(-1);
+  }
+
+  .back-link {
+    direction: rtl;
+  }
+}
+
 // Scrollbar styling
 ::-webkit-scrollbar {
   width: 4px;

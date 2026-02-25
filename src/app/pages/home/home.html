@@ -1,23 +1,43 @@
 <div class="home">
+  <!-- Language picker -->
+  <div class="lang-picker">
+    <button class="lang-btn" (click)="toggleLang()">
+      {{ localeLabels[i18n.locale()] }}
+      <span class="lang-caret" [class.lang-caret--open]="langOpen()">▾</span>
+    </button>
+    @if (langOpen()) {
+      <div class="lang-dropdown">
+        @for (loc of locales; track loc) {
+          <button
+            class="lang-option"
+            [class.lang-option--active]="loc === i18n.locale()"
+            (click)="selectLang(loc)">
+            {{ localeLabels[loc] }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
   <!-- Hero -->
   <div class="hero">
     <img class="hero-logo" src="x.png" alt="xAI Workspace" />
     <h1>xAI Workspace</h1>
     <p class="hero-sub">
-      Hey {{ tg.userName() }}! Your AI agent guide.
+      {{ i18n.t('hero.greeting', { name: tg.userName() }) }}
     </p>
   </div>
 
   @if (!tg.isTelegram) {
     <div class="invite-banner invite-banner--warning">
-      <p>This is an invitation-only application!</p>
+      <p>{{ i18n.t('hero.inviteOnly') }}</p>
     </div>
   }
 
   <!-- Getting Started -->
-  <div class="section-header">Getting Started</div>
+  <div class="section-header">{{ i18n.t('section.gettingStarted') }}</div>
   <div class="card-list">
-    @for (article of gettingStarted; track article.id) {
+    @for (article of gettingStarted(); track article.id) {
       <div class="card-item" (click)="open(article)">
         <span class="card-icon">{{ article.icon }}</span>
         <div class="card-text">
@@ -30,9 +50,9 @@
   </div>
 
   <!-- Features -->
-  <div class="section-header">Features</div>
+  <div class="section-header">{{ i18n.t('section.features') }}</div>
   <div class="card-list">
-    @for (article of features; track article.id) {
+    @for (article of features(); track article.id) {
       <div class="card-item" (click)="open(article)">
         <span class="card-icon">{{ article.icon }}</span>
         <div class="card-text">
@@ -45,9 +65,9 @@
   </div>
 
   <!-- Guides -->
-  <div class="section-header">Guides</div>
+  <div class="section-header">{{ i18n.t('section.guides') }}</div>
   <div class="card-list">
-    @for (article of guides; track article.id) {
+    @for (article of guides(); track article.id) {
       <div class="card-item" (click)="open(article)">
         <span class="card-icon">{{ article.icon }}</span>
         <div class="card-text">
@@ -61,11 +81,11 @@
 
   <!-- Footer -->
   <div class="footer">
-    <p>xAI Workspace by xShopper Pty Ltd</p>
+    <p>{{ i18n.t('footer.company') }}</p>
     <p class="footer-links">
-      <a routerLink="/privacy">Privacy Policy</a>
+      <a routerLink="/privacy">{{ i18n.t('footer.privacy') }}</a>
       <span class="footer-sep"> · </span>
-      <a routerLink="/terms">Terms of Service</a>
+      <a routerLink="/terms">{{ i18n.t('footer.terms') }}</a>
     </p>
   </div>
 </div>

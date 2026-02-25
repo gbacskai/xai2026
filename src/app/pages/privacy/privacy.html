@@ -1,13 +1,13 @@
 <div class="privacy">
   <div class="privacy-header">
-    <h1>Privacy Policy</h1>
-    <p class="privacy-sub">Last updated: February 2026</p>
+    <h1>{{ i18n.t('privacy.title') }}</h1>
+    <p class="privacy-sub">{{ i18n.t('privacy.lastUpdated') }}</p>
   </div>
 
   <div class="privacy-body" [innerHTML]="html"></div>
 
   <!-- Back link for desktop/web (no Telegram BackButton) -->
   <div class="privacy-footer">
-    <a href="/" class="back-link">← Back</a>
+    <a href="/" class="back-link">{{ i18n.t('back') }}</a>
   </div>
 </div>

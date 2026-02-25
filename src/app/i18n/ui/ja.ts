@@ -1,0 +1,21 @@
+import { UiStrings } from '../i18n.types';
+
+export const JA: UiStrings = {
+  'hero.greeting': '\u3053\u3093\u306b\u3061\u306f {name}\u3055\u3093\uff01AI\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u30ac\u30a4\u30c9\u3067\u3059\u3002',
+  'hero.inviteOnly': '\u3053\u308c\u306f\u62db\u5f85\u5236\u306e\u30a2\u30d7\u30ea\u3067\u3059\uff01',
+  'section.gettingStarted': '\u306f\u3058\u3081\u306b',
+  'section.features': '\u6a5f\u80fd',
+  'section.guides': '\u30ac\u30a4\u30c9',
+  'footer.company': 'xAI Workspace by xShopper Pty Ltd',
+  'footer.privacy': '\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc\u30dd\u30ea\u30b7\u30fc',
+  'footer.terms': '\u5229\u7528\u898f\u7d04',
+  'article.back': '\u2190 \u8a18\u4e8b\u4e00\u89a7\u306b\u623b\u308b',
+  'article.copied': '"{cmd}" \u3092\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f \u2014 \u30c1\u30e3\u30c3\u30c8\u306b\u8cbc\u308a\u4ed8\u3051\u3066\u304f\u3060\u3055\u3044',
+  'privacy.title': '\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc\u30dd\u30ea\u30b7\u30fc',
+  'privacy.lastUpdated': '\u6700\u7d42\u66f4\u65b0\uff1a2026\u5e742\u6708',
+  'terms.title': '\u5229\u7528\u898f\u7d04',
+  'terms.lastUpdated': '\u6700\u7d42\u66f4\u65b0\uff1a2026\u5e742\u6708',
+  'authorize.title': '\u30b5\u30fc\u30d3\u30b9\u306e\u63a5\u7d9a',
+  'authorize.subtitle': '/authorize \u3068\u30ab\u30b9\u30bf\u30e0 OAuth \u306e\u4f7f\u7528',
+  'back': '\u2190 \u623b\u308b',
+};

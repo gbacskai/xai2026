@@ -1,0 +1,21 @@
+import { UiStrings } from '../i18n.types';
+
+export const EN: UiStrings = {
+  'hero.greeting': 'Hey {name}! Your AI agent guide.',
+  'hero.inviteOnly': 'This is an invitation-only application!',
+  'section.gettingStarted': 'Getting Started',
+  'section.features': 'Features',
+  'section.guides': 'Guides',
+  'footer.company': 'xAI Workspace by xShopper Pty Ltd',
+  'footer.privacy': 'Privacy Policy',
+  'footer.terms': 'Terms of Service',
+  'article.back': '\u2190 Back to all articles',
+  'article.copied': '"{cmd}" copied \u2014 paste it in the chat',
+  'privacy.title': 'Privacy Policy',
+  'privacy.lastUpdated': 'Last updated: February 2026',
+  'terms.title': 'Terms of Service',
+  'terms.lastUpdated': 'Last updated: February 2026',
+  'authorize.title': 'Connecting Services',
+  'authorize.subtitle': 'Using /authorize and custom OAuth',
+  'back': '\u2190 Back',
+};

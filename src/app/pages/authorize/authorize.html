@@ -1,12 +1,12 @@
 <div class="authorize">
   <div class="authorize-header">
-    <h1>Connecting Services</h1>
-    <p class="authorize-sub">Using /authorize and custom OAuth</p>
+    <h1>{{ i18n.t('authorize.title') }}</h1>
+    <p class="authorize-sub">{{ i18n.t('authorize.subtitle') }}</p>
   </div>
 
   <div class="authorize-body" [innerHTML]="html"></div>
 
   <div class="authorize-footer">
-    <a href="/" class="back-link">&larr; Back</a>
+    <a href="/" class="back-link">{{ i18n.t('back') }}</a>
   </div>
 </div>

@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, OnDestroy, signal, ElementRef, viewChild, ViewEncapsulation } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
 import { TelegramService } from '../../services/telegram.service';
-import { ARTICLES } from '../../data/articles';
+import { I18nService } from '../../i18n/i18n.service';
 
 @Component({
   selector: 'app-article',
@@ -16,6 +16,7 @@ export class ArticlePage implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private tg = inject(TelegramService);
+  i18n = inject(I18nService);
 
   title = signal('');
   subtitle = signal('');
@@ -29,7 +30,7 @@ export class ArticlePage implements OnInit, OnDestroy {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
-    const article = ARTICLES.find(a => a.id === id);
+    const article = this.i18n.articles().find(a => a.id === id);
 
     if (!article) {
       this.router.navigate(['/']);
@@ -59,15 +60,13 @@ export class ArticlePage implements OnInit, OnDestroy {
   onBodyClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
 
-    // Check if clicked element is an inline <code> containing a /command
-    // (skip <code> inside <pre> — those are code blocks)
     if (target.tagName === 'CODE' && !target.closest('pre')) {
       const text = target.textContent?.trim() ?? '';
       if (text.startsWith('/')) {
         event.preventDefault();
         this.tg.haptic('medium');
         navigator.clipboard.writeText(text).then(() => {
-          this.tg.showAlert(`"${text}" copied — paste it in the chat`, () => this.tg.close());
+          this.tg.showAlert(this.i18n.t('article.copied', { cmd: text }), () => this.tg.close());
         });
       }
     }

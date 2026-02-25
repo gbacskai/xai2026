@@ -1,0 +1,21 @@
+import { UiStrings } from '../i18n.types';
+
+export const ES: UiStrings = {
+  'hero.greeting': '\u00a1Hola {name}! Tu gu\u00eda de agente IA.',
+  'hero.inviteOnly': '\u00a1Esta es una aplicaci\u00f3n solo por invitaci\u00f3n!',
+  'section.gettingStarted': 'Primeros pasos',
+  'section.features': 'Funciones',
+  'section.guides': 'Gu\u00edas',
+  'footer.company': 'xAI Workspace de xShopper Pty Ltd',
+  'footer.privacy': 'Pol\u00edtica de privacidad',
+  'footer.terms': 'T\u00e9rminos de servicio',
+  'article.back': '\u2190 Volver a todos los art\u00edculos',
+  'article.copied': '"{cmd}" copiado \u2014 p\u00e9galo en el chat',
+  'privacy.title': 'Pol\u00edtica de privacidad',
+  'privacy.lastUpdated': '\u00daltima actualizaci\u00f3n: febrero 2026',
+  'terms.title': 'T\u00e9rminos de servicio',
+  'terms.lastUpdated': '\u00daltima actualizaci\u00f3n: febrero 2026',
+  'authorize.title': 'Conectar servicios',
+  'authorize.subtitle': 'Usando /authorize y OAuth personalizado',
+  'back': '\u2190 Volver',
+};
