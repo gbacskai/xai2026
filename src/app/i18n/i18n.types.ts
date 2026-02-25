@@ -36,7 +36,9 @@ export interface UiStrings {
   'chat.loginDivider': string;
   'chat.loginHint': string;
   'chat.linkTelegram': string;
+  'chat.loginGithub': string;
   'chat.linkGoogle': string;
+  'chat.linkGithub': string;
   'chat.linkSuccess': string;
   'chat.disconnected': string;
   'footer.logout': string;
