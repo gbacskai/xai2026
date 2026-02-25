@@ -33,7 +33,7 @@ export class ChatService {
 
     this.connectionState.set('connecting');
 
-    let wasConnected = false;
+    let authenticated = false;
 
     try {
       this.ws = new WebSocket(environment.wsUrl);
@@ -43,15 +43,34 @@ export class ChatService {
     }
 
     this.ws.onopen = () => {
-      wasConnected = true;
-      this.connectionState.set('connected');
-      this.reconnectAttempts = 0;
+      // Send auth immediately on connect
       this.ws!.send(JSON.stringify({ type: 'auth', ...payload }));
     };
 
     this.ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+
+        // Handle auth response
+        if (msg.type === 'auth_ok') {
+          authenticated = true;
+          this.connectionState.set('connected');
+          this.reconnectAttempts = 0;
+          return;
+        }
+
+        if (msg.type === 'auth_error') {
+          this.connectionState.set('error');
+          this.messages.update(msgs => [...msgs, {
+            id: crypto.randomUUID(),
+            text: msg.error || 'Authentication failed',
+            sender: 'system',
+            timestamp: Date.now(),
+          }]);
+          return;
+        }
+
+        // Handle chat messages
         if (msg.type === 'message' || msg.type === 'chat') {
           this.messages.update(msgs => [...msgs, {
             id: msg.id ?? crypto.randomUUID(),
@@ -65,8 +84,8 @@ export class ChatService {
 
     this.ws.onclose = () => {
       this.connectionState.set('disconnected');
-      // Only reconnect if we had a successful connection before
-      if (wasConnected) {
+      // Only reconnect if we had a successful auth before
+      if (authenticated) {
         this.scheduleReconnect();
       }
     };

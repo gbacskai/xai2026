@@ -3,10 +3,14 @@
     <div class="chat-header-info">
       <span class="chat-header-title">xAI Bot</span>
       <span class="chat-header-status"
-        [class.chat-header-status--connected]="chat.connectionState() === 'connected'">
-        {{ chat.connectionState() === 'connected'
-           ? i18n.t('chat.connected')
-           : i18n.t('chat.connecting') }}
+        [class.chat-header-status--connected]="chat.connectionState() === 'connected'"
+        [class.chat-header-status--error]="chat.connectionState() === 'error'">
+        @switch (chat.connectionState()) {
+          @case ('connected') { {{ i18n.t('chat.connected') }} }
+          @case ('error') { Disconnected }
+          @case ('disconnected') { Disconnected }
+          @default { {{ i18n.t('chat.connecting') }} }
+        }
       </span>
     </div>
     <button class="chat-close" (click)="chat.toggle()" aria-label="Close chat">&times;</button>
