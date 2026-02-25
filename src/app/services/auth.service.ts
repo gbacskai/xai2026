@@ -37,10 +37,8 @@ export class AuthService {
     sessionStorage.removeItem('tg_web_user');
   }
 
-  getAuthPayload(): { id: number; first_name: string; hash: string; auth_date: number } | null {
-    const u = this.webUser();
-    if (!u) return null;
-    return { id: u.id, first_name: u.first_name, hash: u.hash, auth_date: u.auth_date };
+  getAuthPayload(): TelegramLoginUser | null {
+    return this.webUser();
   }
 
   openTelegramLogin(): void {
