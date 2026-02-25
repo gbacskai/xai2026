@@ -94,6 +94,10 @@
       <a routerLink="/privacy">{{ i18n.t('footer.privacy') }}</a>
       <span class="footer-sep"> · </span>
       <a routerLink="/terms">{{ i18n.t('footer.terms') }}</a>
+      @if (!tg.isTelegram) {
+        <span class="footer-sep"> · </span>
+        <a class="logout-link" (click)="logout()">{{ i18n.t('footer.logout') }}</a>
+      }
     </p>
   </div>
 </div>

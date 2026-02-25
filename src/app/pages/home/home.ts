@@ -48,4 +48,8 @@ export class HomePage implements OnInit {
   loginWithTelegram() {
     this.auth.openTelegramLogin();
   }
+
+  logout() {
+    this.auth.logout();
+  }
 }

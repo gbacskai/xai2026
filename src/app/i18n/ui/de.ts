@@ -25,4 +25,5 @@ export const DE: UiStrings = {
   'chat.empty': 'Sende eine Nachricht, um mit xAI Bot zu chatten',
   'chat.loginButton': 'Mit Telegram anmelden',
   'chat.loginHint': 'Melde dich an, um mit unserem KI-Assistenten zu chatten',
+  'footer.logout': 'Abmelden',
 };

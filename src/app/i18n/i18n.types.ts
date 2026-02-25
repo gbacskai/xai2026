@@ -31,6 +31,7 @@ export interface UiStrings {
   'chat.empty': string;
   'chat.loginButton': string;
   'chat.loginHint': string;
+  'footer.logout': string;
 }
 
 export interface LocalizedArticle {

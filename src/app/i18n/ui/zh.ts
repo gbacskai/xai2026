@@ -25,4 +25,5 @@ export const ZH: UiStrings = {
   'chat.empty': '发送消息开始与 xAI Bot 聊天',
   'chat.loginButton': '使用 Telegram 登录',
   'chat.loginHint': '登录后即可与 AI 助手聊天',
+  'footer.logout': '退出登录',
 };
