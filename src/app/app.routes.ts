@@ -7,11 +7,10 @@ import { AuthorizePage } from './pages/authorize/authorize';
 import { InvitePage } from './pages/invite/invite';
 import { ModelsPage } from './pages/models/models';
 import { PurchaseCompletePage } from './pages/purchase-complete/purchase-complete';
-import { AnalyticsPage } from './pages/analytics/analytics';
 
 export const routes: Routes = [
   { path: '', component: HomePage },
-  { path: 'analytics', component: AnalyticsPage },
+  { path: 'analytics', loadComponent: () => import('./pages/analytics/analytics').then(m => m.AnalyticsPage) },
   { path: 'article/:id', component: ArticlePage },
   { path: 'authorize', component: AuthorizePage },
   { path: 'invite', component: InvitePage },

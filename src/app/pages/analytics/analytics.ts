@@ -161,7 +161,7 @@ export class AnalyticsPage implements OnInit, OnDestroy {
           legend: { display: true, labels: { color: textColor, boxWidth: 12, padding: 12 } },
           tooltip: {
             callbacks: {
-              label: (ctx) => `$${ctx.parsed.y.toFixed(4)}`,
+              label: (ctx) => `$${(ctx.parsed.y ?? 0).toFixed(4)}`,
             },
           },
           annotation: {
