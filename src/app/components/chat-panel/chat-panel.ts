@@ -41,6 +41,7 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   commandSelectedIndex = signal(0);
 
   @ViewChild('messageList') messageList!: ElementRef<HTMLDivElement>;
+  @ViewChild('chatInput') chatInputRef?: ElementRef<HTMLTextAreaElement>;
 
   private prevMessageCount = 0;
 
@@ -64,6 +65,7 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (text !== null) {
       this.messageText = text;
       this.chat.pendingInput.set(null);
+      requestAnimationFrame(() => this.autoResize());
     }
   });
 
@@ -89,9 +91,18 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (!text) return;
     this.chat.send(text);
     this.messageText = '';
+    requestAnimationFrame(() => this.autoResize());
+  }
+
+  autoResize(): void {
+    const el = this.chatInputRef?.nativeElement;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
   }
 
   onInput(): void {
+    this.autoResize();
     const text = this.messageText;
     if (text.startsWith('/')) {
       const query = text.slice(1).toLowerCase();

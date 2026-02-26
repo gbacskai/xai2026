@@ -237,7 +237,8 @@
   color: var(--tg-theme-text-color);
   resize: none;
   outline: none;
-  max-height: 100px;
+  max-height: 150px;
+  overflow-y: auto;
 
   &::placeholder {
     color: var(--tg-theme-hint-color);
