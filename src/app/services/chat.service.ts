@@ -40,7 +40,7 @@ export class ChatService {
 
   readonly messages = signal<ChatMessage[]>([]);
   readonly connectionState = signal<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
-  readonly isOpen = signal(true);
+  readonly isOpen = signal(false);
   readonly linkCode = signal<{ code: string; botUrl: string } | null>(null);
   readonly linkedProviders = signal<{ provider: string; email?: string; displayName?: string }[]>([]);
   readonly sessions = signal<{ chatId: string; sessionToken: string; provider: string }[]>([]);

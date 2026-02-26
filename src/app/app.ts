@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed, signal } from '@angular/core';
+import { Component, inject, OnInit, computed, signal, effect } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TelegramService } from './services/telegram.service';
 import { I18nService } from './i18n/i18n.service';
@@ -309,6 +309,13 @@ export class App implements OnInit {
 
   showChat = computed(() => !this.tg.isTelegram && this.auth.isAuthenticated());
   sidebarCollapsed = signal(false);
+
+  private autoOpenEffect = effect(() => {
+    if (this.showChat() && window.innerWidth > 860) {
+      this.chat.isOpen.set(true);
+      this.agents.isOpen.set(true);
+    }
+  });
 
   ngOnInit() {
     this.tg.init();

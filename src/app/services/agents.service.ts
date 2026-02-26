@@ -22,7 +22,7 @@ export class AgentsService {
   readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
   readonly operationError = signal<string | null>(null);
-  readonly isOpen = signal(true);
+  readonly isOpen = signal(false);
 
   constructor() {
     this.chat.onAgentMessage = (msg: any) => this.handleMessage(msg);
