@@ -145,6 +145,10 @@
               <button class="agents-list-name" (click)="selectAgent(agent.filename)">
                 {{ agent.name }}
               </button>
+              <span class="agents-priority-dot"
+                [class.priority-high]="agent.priority === 'high'"
+                [class.priority-medium]="agent.priority === 'medium'"
+                [class.priority-low]="agent.priority === 'low' || !agent.priority"></span>
               <button class="agents-list-run" (click)="runAgent({ name: agent.name, filename: agent.filename, content: '' })" title="{{ i18n.t('agents.run') }}">
                 &#9654;
               </button>
@@ -155,10 +159,12 @@
     }
   </div>
 
-  <div class="agents-invite">
-    <div class="agents-invite-title">Invite Friends</div>
-    <input type="email" class="agents-invite-input" [(ngModel)]="inviteEmail" placeholder="Email address" />
-    <textarea class="agents-invite-textarea" [(ngModel)]="inviteMessage" placeholder="Personal message (optional)" rows="2"></textarea>
-    <button class="agents-btn-primary" [disabled]="!inviteEmail.trim()" (click)="sendInvite()">Send Invite</button>
-  </div>
+  @if (showInvite()) {
+    <div class="agents-invite">
+      <div class="agents-invite-title">Invite Friends</div>
+      <input type="email" class="agents-invite-input" [(ngModel)]="inviteEmail" placeholder="Email address" />
+      <textarea class="agents-invite-textarea" [(ngModel)]="inviteMessage" placeholder="Personal message (optional)" rows="2"></textarea>
+      <button class="agents-btn-primary" [disabled]="!inviteEmail.trim()" (click)="sendInvite()">Send Invite</button>
+    </div>
+  }
 </div>

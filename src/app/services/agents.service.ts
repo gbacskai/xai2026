@@ -4,6 +4,7 @@ import { ChatService } from './chat.service';
 export interface AgentEntry {
   name: string;
   filename: string;
+  priority?: string;
 }
 
 export interface AgentDetail {
@@ -71,10 +72,15 @@ export class AgentsService {
 
   private handleMessage(msg: any): void {
     switch (msg.type) {
-      case 'agents_list_result':
-        this.agents.set(msg.agents || []);
+      case 'agents_list_result': {
+        const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
+        const sorted = (msg.agents || []).sort((a: AgentEntry, b: AgentEntry) =>
+          (PRIORITY_ORDER[a.priority || 'low'] ?? 2) - (PRIORITY_ORDER[b.priority || 'low'] ?? 2)
+        );
+        this.agents.set(sorted);
         this.isLoading.set(false);
         break;
+      }
       case 'agents_get_result':
         this.selectedAgent.set({
           name: msg.name,

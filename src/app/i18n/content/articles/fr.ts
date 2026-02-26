@@ -198,12 +198,15 @@ Si votre espace de travail est encore en cours de provisionnement, le bot vous e
     content: `
 ## Forfaits
 
-| Forfait | Prix |
-|------|-------|
-| **Trial** | Gratuit |
-| **Essential** | 100 $/mois |
-| **Professional** | 300 $/mois |
-| **Enterprise** | 600 $/mois |
+| Forfait | Prix | Points forts |
+|------|-------|------------|
+| **Trial** | Gratuit | Sans pub, inviter des amis |
+| **Essential** | 100 $/mois | Sans pub, inviter des amis, meilleurs modèles |
+| **Professional** | 300 $/mois | Modèles prioritaires, pas d'invitation requise |
+| **Enterprise** | 600 $/mois | Modèles premium, instance dédiée |
+| **Ultimate** | 2 500 $/mois | Meilleurs modèles et tarifs, instance dédiée |
+
+Les forfaits supérieurs offrent de meilleurs tarifs et l'accès à des modèles plus performants.
 
 ## Gérer votre abonnement
 

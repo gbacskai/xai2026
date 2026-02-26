@@ -46,6 +46,7 @@ export class ChatService {
   readonly sessions = signal<{ chatId: string; sessionToken: string; provider: string }[]>([]);
   readonly currentChatId = signal<string>('');
   readonly pendingInput = signal<string | null>(null);
+  readonly currentTier = signal<string>('trial');
 
   onAgentMessage: ((msg: any) => void) | null = null;
 
@@ -105,6 +106,7 @@ export class ChatService {
           authenticated = true;
           this.connectionState.set('connected');
           this.reconnectAttempts = 0;
+          if (msg.tier) this.currentTier.set(msg.tier);
           if (msg.chatId && msg.sessionToken) {
             this.sessionToken = msg.sessionToken;
             this.currentChatId.set(msg.chatId);

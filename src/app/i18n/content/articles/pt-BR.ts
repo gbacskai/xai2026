@@ -198,12 +198,15 @@ Se o provisionamento ainda estiver em andamento, o bot avisará você. Aguarde a
     content: `
 ## Planos
 
-| Plano | Preço |
-|------|-------|
-| **Trial** | Gratuito |
-| **Essential** | $100/mês |
-| **Professional** | $300/mês |
-| **Enterprise** | $600/mês |
+| Plano | Preço | Destaques |
+|------|-------|------------|
+| **Trial** | Gratuito | Sem anúncios, convidar amigos |
+| **Essential** | $100/mês | Sem anúncios, convidar amigos, modelos melhores |
+| **Professional** | $300/mês | Modelos prioritários, sem convite necessário |
+| **Enterprise** | $600/mês | Modelos premium, instância dedicada |
+| **Ultimate** | $2.500/mês | Melhores modelos e tarifas, instância dedicada |
+
+Planos superiores oferecem melhores tarifas e acesso a modelos mais avançados.
 
 ## Gerenciando sua assinatura
 

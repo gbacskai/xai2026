@@ -198,12 +198,15 @@ If your workspace is still being provisioned, the bot will let you know. Wait a 
     content: `
 ## Plans
 
-| Plan | Price |
-|------|-------|
-| **Trial** | Free |
-| **Essential** | $100/mo |
-| **Professional** | $300/mo |
-| **Enterprise** | $600/mo |
+| Plan | Price | Highlights |
+|------|-------|------------|
+| **Trial** | Free | Ad-free, invite friends |
+| **Essential** | $100/mo | Ad-free, invite friends, better models |
+| **Professional** | $300/mo | Priority models, no invite needed |
+| **Enterprise** | $600/mo | Premium models, dedicated instance |
+| **Ultimate** | $2,500/mo | Best models & rates, dedicated instance |
+
+Higher tiers unlock better rates and access to more capable models.
 
 ## Managing your subscription
 

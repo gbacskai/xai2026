@@ -198,12 +198,15 @@ Wenn dein Workspace noch bereitgestellt wird, informiert dich der Bot darüber. 
     content: `
 ## Tarife
 
-| Tarif | Preis |
-|------|-------|
-| **Trial** | Kostenlos |
-| **Essential** | 100 $/Monat |
-| **Professional** | 300 $/Monat |
-| **Enterprise** | 600 $/Monat |
+| Tarif | Preis | Highlights |
+|------|-------|------------|
+| **Trial** | Kostenlos | Werbefrei, Freunde einladen |
+| **Essential** | 100 $/Monat | Werbefrei, Freunde einladen, bessere Modelle |
+| **Professional** | 300 $/Monat | Prioritätsmodelle, keine Einladung nötig |
+| **Enterprise** | 600 $/Monat | Premium-Modelle, dedizierte Instanz |
+| **Ultimate** | 2.500 $/Monat | Beste Modelle & Tarife, dedizierte Instanz |
+
+Höhere Tarife bieten bessere Preise und Zugang zu leistungsfähigeren Modellen.
 
 ## Abonnement verwalten
 

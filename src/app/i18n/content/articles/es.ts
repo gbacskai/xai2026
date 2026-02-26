@@ -198,12 +198,15 @@ Si tu espacio de trabajo todavía está siendo aprovisionado, el bot te lo hará
     content: `
 ## Planes
 
-| Plan | Precio |
-|------|-------|
-| **Trial** | Gratis |
-| **Essential** | $100/mes |
-| **Professional** | $300/mes |
-| **Enterprise** | $600/mes |
+| Plan | Precio | Destacados |
+|------|-------|------------|
+| **Trial** | Gratis | Sin anuncios, invitar amigos |
+| **Essential** | $100/mes | Sin anuncios, invitar amigos, mejores modelos |
+| **Professional** | $300/mes | Modelos prioritarios, sin invitación necesaria |
+| **Enterprise** | $600/mes | Modelos premium, instancia dedicada |
+| **Ultimate** | $2,500/mes | Mejores modelos y tarifas, instancia dedicada |
+
+Los planes superiores ofrecen mejores tarifas y acceso a modelos más capaces.
 
 ## Gestionar tu suscripción
 
