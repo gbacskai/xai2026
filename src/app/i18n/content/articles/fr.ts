@@ -198,12 +198,12 @@ Si votre espace de travail est encore en cours de provisionnement, le bot vous e
     content: `
 ## Forfaits
 
-| Forfait | Prix | Tokens |
-|------|-------|--------|
-| **Trial** | Gratuit | 50K |
-| **Essential** | 100 $/mois | 750K |
-| **Professional** | 300 $/mois | 3M |
-| **Enterprise** | 600 $/mois | 8M |
+| Forfait | Prix |
+|------|-------|
+| **Trial** | Gratuit |
+| **Essential** | 100 $/mois |
+| **Professional** | 300 $/mois |
+| **Enterprise** | 600 $/mois |
 
 ## Gérer votre abonnement
 

@@ -198,12 +198,12 @@ Se o provisionamento ainda estiver em andamento, o bot avisará você. Aguarde a
     content: `
 ## Planos
 
-| Plano | Preço | Tokens |
-|------|-------|--------|
-| **Trial** | Gratuito | 50K |
-| **Essential** | $100/mês | 750K |
-| **Professional** | $300/mês | 3M |
-| **Enterprise** | $600/mês | 8M |
+| Plano | Preço |
+|------|-------|
+| **Trial** | Gratuito |
+| **Essential** | $100/mês |
+| **Professional** | $300/mês |
+| **Enterprise** | $600/mês |
 
 ## Gerenciando sua assinatura
 

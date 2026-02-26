@@ -198,12 +198,12 @@ Si tu espacio de trabajo todavía está siendo aprovisionado, el bot te lo hará
     content: `
 ## Planes
 
-| Plan | Precio | Tokens |
-|------|-------|--------|
-| **Trial** | Gratis | 50K |
-| **Essential** | $100/mes | 750K |
-| **Professional** | $300/mes | 3M |
-| **Enterprise** | $600/mes | 8M |
+| Plan | Precio |
+|------|-------|
+| **Trial** | Gratis |
+| **Essential** | $100/mes |
+| **Professional** | $300/mes |
+| **Enterprise** | $600/mes |
 
 ## Gestionar tu suscripción
 

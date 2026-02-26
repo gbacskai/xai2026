@@ -198,12 +198,12 @@ Wenn dein Workspace noch bereitgestellt wird, informiert dich der Bot darüber. 
     content: `
 ## Tarife
 
-| Tarif | Preis | Token |
-|------|-------|--------|
-| **Trial** | Kostenlos | 50K |
-| **Essential** | 100 $/Monat | 750K |
-| **Professional** | 300 $/Monat | 3M |
-| **Enterprise** | 600 $/Monat | 8M |
+| Tarif | Preis |
+|------|-------|
+| **Trial** | Kostenlos |
+| **Essential** | 100 $/Monat |
+| **Professional** | 300 $/Monat |
+| **Enterprise** | 600 $/Monat |
 
 ## Abonnement verwalten
 

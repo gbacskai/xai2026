@@ -198,12 +198,12 @@ If your workspace is still being provisioned, the bot will let you know. Wait a 
     content: `
 ## Plans
 
-| Plan | Price | Tokens |
-|------|-------|--------|
-| **Trial** | Free | 50K |
-| **Essential** | $100/mo | 750K |
-| **Professional** | $300/mo | 3M |
-| **Enterprise** | $600/mo | 8M |
+| Plan | Price |
+|------|-------|
+| **Trial** | Free |
+| **Essential** | $100/mo |
+| **Professional** | $300/mo |
+| **Enterprise** | $600/mo |
 
 ## Managing your subscription
 
