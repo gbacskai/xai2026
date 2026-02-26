@@ -51,7 +51,7 @@ export class ChatService {
   onAgentMessage: ((msg: any) => void) | null = null;
 
   constructor() {
-    const stored = sessionStorage.getItem('chat_sessions');
+    const stored = localStorage.getItem('chat_sessions');
     if (stored) {
       try { this.sessions.set(JSON.parse(stored)); } catch { /* ignore */ }
     }
@@ -114,7 +114,18 @@ export class ChatService {
               const filtered = list.filter(s => s.chatId !== msg.chatId);
               return [...filtered, { chatId: msg.chatId, sessionToken: msg.sessionToken, provider: msg.provider || '' }];
             });
-            sessionStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+            // Add related accounts from server-side enumeration
+            if (msg.relatedAccounts?.length) {
+              this.sessions.update(list => {
+                let updated = [...list];
+                for (const acct of msg.relatedAccounts) {
+                  updated = updated.filter(s => s.chatId !== acct.chatId);
+                  updated.push({ chatId: acct.chatId, sessionToken: acct.sessionToken, provider: '' });
+                }
+                return updated;
+              });
+            }
+            localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
           }
           return;
         }
@@ -124,6 +135,31 @@ export class ChatService {
           this.messages.update(msgs => [...msgs, {
             id: crypto.randomUUID(),
             text: msg.error || 'Authentication failed',
+            sender: 'system',
+            timestamp: Date.now(),
+          }]);
+          return;
+        }
+
+        // Handle token refresh (issued on session token reconnect)
+        if (msg.type === 'token_refresh') {
+          this.sessionToken = msg.sessionToken;
+          this.sessions.update(list =>
+            list.map(s => s.chatId === this.currentChatId() ? { ...s, sessionToken: msg.sessionToken } : s)
+          );
+          localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          return;
+        }
+
+        // Handle expired session — remove stale session and close
+        if (msg.type === 'auth_required' && msg.reason === 'session_expired') {
+          this.sessions.update(list => list.filter(s => s.sessionToken !== this.sessionToken));
+          localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          this.sessionToken = null;
+          this.connectionState.set('error');
+          this.messages.update(msgs => [...msgs, {
+            id: crypto.randomUUID(),
+            text: 'Session expired. Please log in again.',
             sender: 'system',
             timestamp: Date.now(),
           }]);
@@ -167,7 +203,7 @@ export class ChatService {
             const filtered = list.filter(s => s.chatId !== msg.chatId);
             return [...filtered, { chatId: msg.chatId, sessionToken: msg.sessionToken, provider: '' }];
           });
-          sessionStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
           this.messages.update(msgs => [...msgs, {
             id: crypto.randomUUID(),
             text: 'Another account found — use the account switcher to access it.',
