@@ -13,12 +13,7 @@ En appuyant sur "Accepter et continuer" dans le bot Telegram, vous acceptez les 
 
 ## Forfaits et paiement
 
-- **Trial** : gratuit, 50 000 tokens
-- **Essential** : 100 USD/mois, 750 000 tokens
-- **Professional** : 300 USD/mois, 3 000 000 tokens
-- **Enterprise** : 600 USD/mois, 8 000 000 tokens
-
-Les abonnements se renouvellent automatiquement tous les 30 jours. Vous pouvez résilier à tout moment via /billing.
+Les forfaits et tarifs actuels sont disponibles dans l'application via /billing. Les abonnements se renouvellent automatiquement tous les 30 jours. Vous pouvez résilier à tout moment.
 
 ---
 

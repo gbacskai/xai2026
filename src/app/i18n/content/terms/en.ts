@@ -13,12 +13,7 @@ By tapping "Accept & Continue" in the Telegram bot, you agree to these Terms of 
 
 ## Service Plans and Payment
 
-- **Trial**: Free, 50,000 tokens
-- **Essential**: USD 100/month, 750,000 tokens
-- **Professional**: USD 300/month, 3,000,000 tokens
-- **Enterprise**: USD 600/month, 8,000,000 tokens
-
-Subscriptions renew automatically every 30 days. You may cancel at any time via /billing.
+Current plans and pricing are available in the app via /billing. Subscriptions renew automatically every 30 days. You may cancel at any time.
 
 ---
 

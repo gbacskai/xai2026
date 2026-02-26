@@ -13,12 +13,7 @@ Ao tocar em "Aceitar e Continuar" no bot do Telegram, você concorda com estes T
 
 ## Planos e Pagamento
 
-- **Trial**: Gratuito, 50.000 tokens
-- **Essential**: USD 100/mês, 750.000 tokens
-- **Professional**: USD 300/mês, 3.000.000 tokens
-- **Enterprise**: USD 600/mês, 8.000.000 tokens
-
-As assinaturas são renovadas automaticamente a cada 30 dias. Você pode cancelar a qualquer momento via /billing.
+Os planos e preços atuais estão disponíveis no aplicativo via /billing. As assinaturas são renovadas automaticamente a cada 30 dias. Você pode cancelar a qualquer momento.
 
 ---
 

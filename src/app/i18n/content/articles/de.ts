@@ -210,12 +210,12 @@ Wenn dein Workspace noch bereitgestellt wird, informiert dich der Bot darüber. 
 Sende \`/billing\`, um das Abrechnungs-Dashboard zu öffnen. Dort kannst du:
 - Deinen aktuellen Tarif und das Verlängerungsdatum einsehen
 - Up- oder Downgrade durchführen
-- Automatisches Aufladen für zusätzliche Token-Pakete aktivieren
+- Automatisches Aufladen für zusätzliche Nutzung aktivieren
 - Deine Zahlungsmethode aktualisieren
 
-## Token-Pakete
+## Zusätzliche Nutzung
 
-Wird dein Guthaben knapp? Aktiviere **automatisches Aufladen** unter \`/billing\`, um automatisch zusätzliche Token zu kaufen, wenn du dein Limit erreichst.
+Wird dein Guthaben knapp? Aktiviere **automatisches Aufladen** unter \`/billing\`, um automatisch zusätzliche Nutzung zu kaufen, wenn du dein Limit erreichst.
 
 ## Zahlungshistorie
 

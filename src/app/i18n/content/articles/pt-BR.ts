@@ -210,12 +210,12 @@ Se o provisionamento ainda estiver em andamento, o bot avisará você. Aguarde a
 Envie \`/billing\` para abrir o painel de cobrança, onde você pode:
 - Ver seu plano atual e a data de renovação
 - Fazer upgrade ou downgrade
-- Ativar recarga automática para pacotes extras de tokens
+- Ativar recarga automática para uso extra
 - Atualizar seu método de pagamento
 
-## Pacotes de tokens
+## Uso extra
 
-Ficou com poucos tokens? Ative a **recarga automática** em \`/billing\` para comprar tokens extras automaticamente ao atingir seu limite.
+Ficou com pouco crédito? Ative a **recarga automática** em \`/billing\` para comprar uso extra automaticamente ao atingir seu limite.
 
 ## Histórico de pagamentos
 

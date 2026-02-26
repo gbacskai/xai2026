@@ -210,12 +210,12 @@ If your workspace is still being provisioned, the bot will let you know. Wait a 
 Send \`/billing\` to open the billing dashboard where you can:
 - View your current plan and renewal date
 - Upgrade or downgrade
-- Enable auto top-up for extra token packs
+- Enable auto top-up for extra usage
 - Update your payment method
 
-## Token packs
+## Extra usage
 
-Running low? Enable **auto top-up** in \`/billing\` to automatically purchase extra tokens when you hit your limit.
+Running low? Enable **auto top-up** in \`/billing\` to automatically purchase extra usage when you hit your limit.
 
 ## Payment history
 

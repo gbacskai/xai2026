@@ -210,12 +210,12 @@ Si tu espacio de trabajo todavía está siendo aprovisionado, el bot te lo hará
 Envía \`/billing\` para abrir el panel de facturación, donde puedes:
 - Ver tu plan actual y la fecha de renovación
 - Subir o bajar de plan
-- Activar la recarga automática para paquetes de tokens adicionales
+- Activar la recarga automática para uso adicional
 - Actualizar tu método de pago
 
-## Paquetes de tokens
+## Uso adicional
 
-¿Te estás quedando sin tokens? Activa la **recarga automática** en \`/billing\` para comprar tokens adicionales automáticamente cuando alcances tu límite.
+¿Te estás quedando sin crédito? Activa la **recarga automática** en \`/billing\` para comprar uso adicional automáticamente cuando alcances tu límite.
 
 ## Historial de pagos
 

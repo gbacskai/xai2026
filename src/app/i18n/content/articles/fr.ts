@@ -210,12 +210,12 @@ Si votre espace de travail est encore en cours de provisionnement, le bot vous e
 Envoyez \`/billing\` pour ouvrir le tableau de bord de facturation, où vous pouvez :
 - Consulter votre forfait actuel et la date de renouvellement
 - Passer à un forfait supérieur ou inférieur
-- Activer le rechargement automatique pour des packs de tokens supplémentaires
+- Activer le rechargement automatique pour de l'utilisation supplémentaire
 - Mettre à jour votre mode de paiement
 
-## Packs de tokens
+## Utilisation supplémentaire
 
-Vous manquez de tokens ? Activez le **rechargement automatique** dans \`/billing\` pour acheter automatiquement des tokens supplémentaires lorsque vous atteignez votre limite.
+Vous manquez de crédits ? Activez le **rechargement automatique** dans \`/billing\` pour acheter automatiquement de l'utilisation supplémentaire lorsque vous atteignez votre limite.
 
 ## Historique des paiements
 
