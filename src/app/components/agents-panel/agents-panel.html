@@ -90,6 +90,12 @@
     @else {
       <div class="agents-list-toolbar">
         <button class="agents-btn-create" (click)="startCreate()">+ {{ i18n.t('agents.create') }}</button>
+        <select class="agents-template-select" (change)="onTemplateSelect($event)">
+          <option value="" disabled selected>From template...</option>
+          @for (tpl of templates; track tpl.name) {
+            <option [value]="tpl.name">{{ tpl.label }}</option>
+          }
+        </select>
       </div>
       @if (agents.isLoading()) {
         <div class="agents-empty">{{ i18n.t('agents.loading') }}</div>

@@ -64,6 +64,11 @@ export class AgentsService {
     this.selectedAgent.set(null);
   }
 
+  /** Tell the backend to regenerate AGENTS.md from current agent files */
+  private syncAgentsMd(): void {
+    this.chat.sendRaw({ type: 'agents_sync_md' });
+  }
+
   private handleMessage(msg: any): void {
     switch (msg.type) {
       case 'agents_list_result':
@@ -89,6 +94,7 @@ export class AgentsService {
             this.selectedAgent.set({ ...current, content: msg.content || current.content });
           }
           this.refreshList();
+          this.syncAgentsMd();
         }
         break;
       case 'agents_delete_result':
@@ -98,6 +104,7 @@ export class AgentsService {
         } else {
           this.selectedAgent.set(null);
           this.refreshList();
+          this.syncAgentsMd();
         }
         break;
       case 'agents_create_result':
@@ -106,6 +113,7 @@ export class AgentsService {
           this.operationError.set(msg.error);
         } else {
           this.refreshList();
+          this.syncAgentsMd();
           // Select the newly created agent
           if (msg.filename) {
             this.getAgent(msg.filename);
