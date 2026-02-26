@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html><body><script>
-  var code = new URLSearchParams(location.search).get('code');
-  if (code) {
-    localStorage.setItem('github_auth', JSON.stringify({ code: code, ts: Date.now() }));
+  var params = new URLSearchParams(location.search);
+  var code = params.get('code');
+  var state = params.get('state');
+  if (code && state) {
+    localStorage.setItem('github_auth', JSON.stringify({ code: code, state: state, ts: Date.now() }));
   }
   window.close();
   document.body.innerText = 'Login successful \u2014 you can close this window.';

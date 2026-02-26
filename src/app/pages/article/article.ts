@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy, signal, ViewEncapsulation } from 
 import { ActivatedRoute, Router } from '@angular/router';
 import { marked } from 'marked';
 import { TelegramService } from '../../services/telegram.service';
+import { ChatService } from '../../services/chat.service';
 import { I18nService } from '../../i18n/i18n.service';
 import { BackButtonComponent } from '../../components/back-button/back-button';
 
@@ -17,6 +18,7 @@ export class ArticlePage implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private tg = inject(TelegramService);
+  private chat = inject(ChatService);
   i18n = inject(I18nService);
 
   title = signal('');
@@ -45,7 +47,8 @@ export class ArticlePage implements OnInit, OnDestroy {
     const defaultCodespan = renderer.codespan.bind(renderer);
     renderer.codespan = (token) => {
       if (token.text.startsWith('/')) {
-        return `<code class="cmd">${token.text}</code>`;
+        const esc = token.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<code class="cmd">${esc}</code>`;
       }
       return defaultCodespan(token);
     };
@@ -66,9 +69,17 @@ export class ArticlePage implements OnInit, OnDestroy {
       if (text.startsWith('/')) {
         event.preventDefault();
         this.tg.haptic('medium');
-        navigator.clipboard.writeText(text).then(() => {
-          this.tg.showAlert(this.i18n.t('article.copied', { cmd: text }), () => this.tg.close());
-        });
+
+        if (this.tg.isTelegram) {
+          navigator.clipboard.writeText(text)
+            .then(() => {
+              this.tg.showAlert(this.i18n.t('article.copied', { cmd: text }));
+            })
+            .catch(() => {});
+        } else {
+          this.chat.isOpen.set(true);
+          this.chat.send(text);
+        }
       }
     }
   }

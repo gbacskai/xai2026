@@ -42,12 +42,18 @@ export class AuthService {
   private readonly botId = environment.botId;
   private googleClientId = '';
 
+  private ghStorageHandler: ((event: StorageEvent) => void) | null = null;
+  private ghStorageTimeout: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     // Fetch public config (Google client ID) from the router
-    fetch(`${environment.routerUrl}/config`)
+    const controller = new AbortController();
+    const fetchTimeout = setTimeout(() => controller.abort(), 5000);
+    fetch(`${environment.routerUrl}/config`, { signal: controller.signal })
       .then(r => r.json())
       .then(cfg => { this.googleClientId = cfg.googleClientId || ''; })
-      .catch(() => { /* router unreachable — Google login will be unavailable */ });
+      .catch(() => { /* router unreachable — Google login will be unavailable */ })
+      .finally(() => clearTimeout(fetchTimeout));
 
     const stored = sessionStorage.getItem('tg_web_user');
     if (stored) {
@@ -153,20 +159,43 @@ export class AuthService {
     const routerUrl = environment.routerUrl;
     if (!routerUrl) return;
 
+    // Generate state for CSRF protection
+    const state = crypto.randomUUID();
+    sessionStorage.setItem('github_oauth_state', state);
+
     window.open(
-      `${routerUrl}/auth/github/start`,
+      `${routerUrl}/auth/github/start?state=${encodeURIComponent(state)}`,
       'github_auth',
       'width=600,height=700,left=200,top=100',
     );
 
+    // Remove previous listener if still active
+    if (this.ghStorageHandler) {
+      window.removeEventListener('storage', this.ghStorageHandler);
+      this.ghStorageHandler = null;
+    }
+    if (this.ghStorageTimeout) {
+      clearTimeout(this.ghStorageTimeout);
+      this.ghStorageTimeout = null;
+    }
+
     // The OAuth callback redirects to /github-auth.html on our origin,
     // which writes the code to localStorage. Listen for that storage event.
-    const storageHandler = (event: StorageEvent) => {
+    const cleanup = () => {
+      window.removeEventListener('storage', handler);
+      this.ghStorageHandler = null;
+      if (this.ghStorageTimeout) { clearTimeout(this.ghStorageTimeout); this.ghStorageTimeout = null; }
+    };
+    const handler = (event: StorageEvent) => {
       if (event.key === 'github_auth' && event.newValue) {
-        window.removeEventListener('storage', storageHandler);
+        cleanup();
         try {
           const data = JSON.parse(event.newValue);
           localStorage.removeItem('github_auth');
+          // Verify state matches
+          const savedState = sessionStorage.getItem('github_oauth_state');
+          sessionStorage.removeItem('github_oauth_state');
+          if (!savedState || data.state !== savedState) return;
           if (data.code) {
             const user: GitHubUser = { provider: 'github', code: data.code };
             this.githubUser.set(user);
@@ -175,7 +204,10 @@ export class AuthService {
         } catch { /* ignore */ }
       }
     };
-    window.addEventListener('storage', storageHandler);
+    this.ghStorageHandler = handler;
+    window.addEventListener('storage', handler);
+    // Auto-remove after 60s
+    this.ghStorageTimeout = setTimeout(cleanup, 60000);
   }
 
   hasLinkedProvider(provider: 'telegram' | 'google' | 'github'): boolean {

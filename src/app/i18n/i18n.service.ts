@@ -134,7 +134,7 @@ export class I18nService {
     let text = UI_STRINGS[loc]?.[key] ?? UI_STRINGS['en'][key];
     if (vars) {
       for (const [k, v] of Object.entries(vars)) {
-        text = text.replace(`{${k}}`, v);
+        text = text.replaceAll(`{${k}}`, v);
       }
     }
     return text;

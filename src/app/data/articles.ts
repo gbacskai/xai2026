@@ -1,6 +1,4 @@
-import { ArticleMeta, FullArticle } from '../i18n/i18n.types';
-
-export type { FullArticle as Article };
+import { ArticleMeta } from '../i18n/i18n.types';
 
 export const ARTICLE_META: ArticleMeta[] = [
   { id: 'welcome',         icon: '👋', category: 'getting-started' },

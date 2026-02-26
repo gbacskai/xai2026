@@ -8,6 +8,7 @@ export interface AgentEntry {
 
 export interface AgentDetail {
   name: string;
+  filename: string;
   content: string;
 }
 
@@ -18,9 +19,10 @@ export class AgentsService {
   readonly agents = signal<AgentEntry[]>([]);
   readonly selectedAgent = signal<AgentDetail | null>(null);
   readonly isLoading = signal(false);
-  readonly isGenerating = signal(false);
-  readonly generateResult = signal<string | null>(null);
-  readonly isOpen = signal(false);
+  readonly isSaving = signal(false);
+  readonly isDeleting = signal(false);
+  readonly operationError = signal<string | null>(null);
+  readonly isOpen = signal(true);
 
   constructor() {
     this.chat.onAgentMessage = (msg: any) => this.handleMessage(msg);
@@ -40,10 +42,22 @@ export class AgentsService {
     this.chat.sendRaw({ type: 'agents_get', name: filename });
   }
 
-  generate(instruction?: string): void {
-    this.isGenerating.set(true);
-    this.generateResult.set(null);
-    this.chat.sendRaw({ type: 'agents_generate', instruction });
+  saveAgent(filename: string, content: string): void {
+    this.isSaving.set(true);
+    this.operationError.set(null);
+    this.chat.sendRaw({ type: 'agents_save', name: filename, content });
+  }
+
+  deleteAgent(filename: string): void {
+    this.isDeleting.set(true);
+    this.operationError.set(null);
+    this.chat.sendRaw({ type: 'agents_delete', name: filename });
+  }
+
+  createAgent(name: string, content: string): void {
+    this.isSaving.set(true);
+    this.operationError.set(null);
+    this.chat.sendRaw({ type: 'agents_create', name, content });
   }
 
   clearSelection(): void {
@@ -57,13 +71,46 @@ export class AgentsService {
         this.isLoading.set(false);
         break;
       case 'agents_get_result':
-        this.selectedAgent.set({ name: msg.name, content: msg.content || '' });
+        this.selectedAgent.set({
+          name: msg.name,
+          filename: msg.filename || msg.name,
+          content: msg.content || '',
+        });
         this.isLoading.set(false);
         break;
-      case 'agents_generate_result':
-        this.generateResult.set(msg.message || 'Done.');
-        this.isGenerating.set(false);
-        this.refreshList();
+      case 'agents_save_result':
+        this.isSaving.set(false);
+        if (msg.error) {
+          this.operationError.set(msg.error);
+        } else {
+          // Update selected agent with new content
+          const current = this.selectedAgent();
+          if (current) {
+            this.selectedAgent.set({ ...current, content: msg.content || current.content });
+          }
+          this.refreshList();
+        }
+        break;
+      case 'agents_delete_result':
+        this.isDeleting.set(false);
+        if (msg.error) {
+          this.operationError.set(msg.error);
+        } else {
+          this.selectedAgent.set(null);
+          this.refreshList();
+        }
+        break;
+      case 'agents_create_result':
+        this.isSaving.set(false);
+        if (msg.error) {
+          this.operationError.set(msg.error);
+        } else {
+          this.refreshList();
+          // Select the newly created agent
+          if (msg.filename) {
+            this.getAgent(msg.filename);
+          }
+        }
         break;
     }
   }

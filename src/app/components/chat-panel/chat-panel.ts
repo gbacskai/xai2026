@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, signal, computed, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ChatService, FileAttachment } from '../../services/chat.service';
+import { ChatService, ChatMessage, FileAttachment } from '../../services/chat.service';
 import { I18nService } from '../../i18n/i18n.service';
 
 const COMMANDS: { command: string; description: string }[] = [
@@ -57,6 +57,14 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.accountMenuOpen.set(false);
     this.chat.switchAccount(chatId);
   }
+
+  private pendingInputEffect = effect(() => {
+    const text = this.chat.pendingInput();
+    if (text !== null) {
+      this.messageText = text;
+      this.chat.pendingInput.set(null);
+    }
+  });
 
   ngOnInit() {
     this.chat.connect();
@@ -129,8 +137,16 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.commandMenuOpen.set(false);
   }
 
-  onCallback(data: string): void {
-    this.chat.sendCallback(data);
+  copyToInput(text: string): void {
+    this.messageText = text;
+  }
+
+  onCallback(data: string, msg?: ChatMessage): void {
+    if (data === '__back__' && msg) {
+      this.chat.restoreMessage(msg.id);
+      return;
+    }
+    this.chat.sendCallback(data, msg?.id);
   }
 
   downloadFile(file: FileAttachment): void {

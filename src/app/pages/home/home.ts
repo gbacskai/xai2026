@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TelegramService } from '../../services/telegram.service';
 import { AuthService } from '../../services/auth.service';
@@ -13,12 +13,13 @@ import { FullArticle, SupportedLocale, SUPPORTED_LOCALES } from '../../i18n/i18n
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   private router = inject(Router);
   private chat = inject(ChatService);
   tg = inject(TelegramService);
   auth = inject(AuthService);
   i18n = inject(I18nService);
+  private linkTimers: ReturnType<typeof setTimeout>[] = [];
 
   locales = SUPPORTED_LOCALES;
   localeLabels = LOCALE_LABELS;
@@ -39,6 +40,20 @@ export class HomePage implements OnInit {
 
   ngOnInit() {
     this.tg.hideBackButton();
+  }
+
+  ngOnDestroy() {
+    this.linkTimers.forEach(t => clearTimeout(t));
+  }
+
+  private pollUntil(check: () => boolean, onSuccess: () => void, maxAttempts = 60) {
+    let attempts = 0;
+    const poll = () => {
+      if (check()) { onSuccess(); return; }
+      if (++attempts >= maxAttempts) return;
+      this.linkTimers.push(setTimeout(poll, 500));
+    };
+    this.linkTimers.push(setTimeout(poll, 1000));
   }
 
   open(article: FullArticle) {
@@ -70,41 +85,26 @@ export class HomePage implements OnInit {
 
   linkTelegram() {
     this.auth.openTelegramLogin();
-    const check = () => {
-      const tgUser = this.auth.webUser();
-      if (tgUser) {
-        this.chat.sendLinkProvider('telegram', { ...tgUser });
-      } else {
-        setTimeout(check, 500);
-      }
-    };
-    setTimeout(check, 1000);
+    this.pollUntil(
+      () => !!this.auth.webUser(),
+      () => this.chat.sendLinkProvider('telegram', { ...this.auth.webUser()! }),
+    );
   }
 
   linkGoogle() {
     this.auth.loginWithGoogle();
-    const check = () => {
-      const g = this.auth.getGoogleAuthPayload();
-      if (g) {
-        this.chat.sendLinkProvider('google', { code: g.code });
-      } else {
-        setTimeout(check, 500);
-      }
-    };
-    setTimeout(check, 1000);
+    this.pollUntil(
+      () => !!this.auth.getGoogleAuthPayload(),
+      () => this.chat.sendLinkProvider('google', { code: this.auth.getGoogleAuthPayload()!.code }),
+    );
   }
 
   linkGithub() {
     this.auth.loginWithGithub();
-    const check = () => {
-      const gh = this.auth.githubUser();
-      if (gh) {
-        this.chat.sendLinkProvider('github', { code: gh.code });
-      } else {
-        setTimeout(check, 500);
-      }
-    };
-    setTimeout(check, 1000);
+    this.pollUntil(
+      () => !!this.auth.githubUser(),
+      () => this.chat.sendLinkProvider('github', { code: this.auth.githubUser()!.code }),
+    );
   }
 
   logoutProvider(provider: string) {

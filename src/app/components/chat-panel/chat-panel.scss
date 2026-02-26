@@ -94,6 +94,11 @@
 
 .chat-bubble-text {
   white-space: pre-wrap;
+
+  &--command {
+    cursor: pointer;
+    &:active { opacity: 0.7; }
+  }
 }
 
 .chat-buttons {
@@ -134,6 +139,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    &:active { opacity: 0.8; }
+  }
+
+  &--back {
+    background: transparent;
+    color: var(--tg-theme-hint-color);
+    border: 1px solid rgba(128, 128, 128, 0.25);
     &:active { opacity: 0.8; }
   }
 

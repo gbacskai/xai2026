@@ -13,8 +13,13 @@ export class TelegramService {
     return u ? (u.first_name + (u.last_name ? ' ' + u.last_name : '')) : 'there';
   });
 
+  private initialized = false;
+  private backCallback: (() => void) | null = null;
+
   init() {
     if (!this.isTelegram) return;
+    if (this.initialized) return;
+    this.initialized = true;
     this.webapp!.ready();
     this.webapp!.expand();
 
@@ -25,12 +30,20 @@ export class TelegramService {
 
   showBackButton(callback: () => void) {
     if (!this.isTelegram) return;
+    if (this.backCallback) {
+      this.webapp!.BackButton.offClick(this.backCallback);
+    }
+    this.backCallback = callback;
     this.webapp!.BackButton.onClick(callback);
     this.webapp!.BackButton.show();
   }
 
   hideBackButton() {
     if (!this.isTelegram) return;
+    if (this.backCallback) {
+      this.webapp!.BackButton.offClick(this.backCallback);
+      this.backCallback = null;
+    }
     this.webapp!.BackButton.hide();
   }
 

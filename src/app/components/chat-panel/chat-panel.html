@@ -40,7 +40,9 @@
         [class.chat-bubble--user]="msg.sender === 'user'"
         [class.chat-bubble--bot]="msg.sender === 'bot'"
         [class.chat-bubble--system]="msg.sender === 'system'">
-        <span class="chat-bubble-text">{{ msg.text }}</span>
+        <span class="chat-bubble-text"
+        [class.chat-bubble-text--command]="msg.sender === 'user' && msg.text.startsWith('/')"
+        (click)="msg.sender === 'user' && msg.text.startsWith('/') && copyToInput(msg.text)">{{ msg.text }}</span>
         @if (msg.buttons) {
           <div class="chat-buttons">
             @for (row of msg.buttons; track $index) {
@@ -49,7 +51,9 @@
                   @if (btn.url) {
                     <a class="chat-btn chat-btn--url" [href]="btn.url" target="_blank" rel="noopener">{{ btn.text }}</a>
                   } @else if (btn.callback_data) {
-                    <button class="chat-btn chat-btn--action" (click)="onCallback(btn.callback_data!)">{{ btn.text }}</button>
+                    <button class="chat-btn chat-btn--action"
+                      [class.chat-btn--back]="btn.callback_data === '__back__'"
+                      (click)="onCallback(btn.callback_data!, msg)">{{ btn.text }}</button>
                   }
                 }
               </div>

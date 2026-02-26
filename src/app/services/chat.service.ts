@@ -22,6 +22,8 @@ export interface ChatMessage {
   timestamp: number;
   buttons?: InlineButton[][];   // rows of buttons
   file?: FileAttachment;
+  _originalText?: string;
+  _originalButtons?: InlineButton[][];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -30,6 +32,7 @@ export class ChatService {
   private auth = inject(AuthService);
 
   private ws: WebSocket | null = null;
+  private _pendingCallbackSource: { messageId: string; originalText: string; originalButtons: InlineButton[][] } | null = null;
   private reconnectAttempts = 0;
   private readonly maxReconnectAttempts = 5;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -37,11 +40,12 @@ export class ChatService {
 
   readonly messages = signal<ChatMessage[]>([]);
   readonly connectionState = signal<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
-  readonly isOpen = signal(false);
+  readonly isOpen = signal(true);
   readonly linkCode = signal<{ code: string; botUrl: string } | null>(null);
   readonly linkedProviders = signal<{ provider: string; email?: string; displayName?: string }[]>([]);
   readonly sessions = signal<{ chatId: string; sessionToken: string; provider: string }[]>([]);
   readonly currentChatId = signal<string>('');
+  readonly pendingInput = signal<string | null>(null);
 
   onAgentMessage: ((msg: any) => void) | null = null;
 
@@ -185,14 +189,35 @@ export class ChatService {
 
         // Handle chat messages
         if (msg.type === 'message' || msg.type === 'chat') {
-          this.messages.update(msgs => [...msgs, {
+          const incoming: ChatMessage = {
             id: msg.id ?? crypto.randomUUID(),
             text: msg.text ?? msg.payload?.text ?? '',
             sender: msg.sender ?? 'bot',
             timestamp: msg.timestamp ?? Date.now(),
             buttons: msg.buttons,
             file: msg.file,
-          }]);
+          };
+
+          // If there's a pending callback and the response has buttons, update in-place
+          if (this._pendingCallbackSource && incoming.buttons?.length) {
+            const source = this._pendingCallbackSource;
+            this._pendingCallbackSource = null;
+            this.messages.update(msgs => msgs.map(m => {
+              if (m.id === source.messageId) {
+                return {
+                  ...m,
+                  text: incoming.text,
+                  buttons: [...incoming.buttons!, [{ text: '\u2039 Back', callback_data: '__back__' }]],
+                  _originalText: m._originalText ?? source.originalText,
+                  _originalButtons: m._originalButtons ?? source.originalButtons,
+                };
+              }
+              return m;
+            }));
+          } else {
+            this._pendingCallbackSource = null;
+            this.messages.update(msgs => [...msgs, incoming]);
+          }
         }
       } catch { /* ignore malformed messages */ }
     };
@@ -210,10 +235,35 @@ export class ChatService {
     };
   }
 
-  sendCallback(data: string): void {
+  sendCallback(data: string, sourceMessageId?: string): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
+      if (sourceMessageId) {
+        const msg = this.messages().find(m => m.id === sourceMessageId);
+        if (msg) {
+          this._pendingCallbackSource = {
+            messageId: sourceMessageId,
+            originalText: msg.text,
+            originalButtons: msg.buttons || [],
+          };
+        }
+      }
       this.ws.send(JSON.stringify({ type: 'callback', data }));
     }
+  }
+
+  restoreMessage(messageId: string): void {
+    this.messages.update(msgs => msgs.map(m => {
+      if (m.id === messageId && m._originalButtons) {
+        return {
+          ...m,
+          text: m._originalText!,
+          buttons: m._originalButtons,
+          _originalText: undefined,
+          _originalButtons: undefined,
+        };
+      }
+      return m;
+    }));
   }
 
   send(text: string): void {

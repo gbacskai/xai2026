@@ -28,7 +28,7 @@ export class InvitePage implements OnInit, OnDestroy {
   ngOnInit() {
     this.code = this.route.snapshot.queryParamMap.get('code') || '';
     this.telegramLink = this.code
-      ? `https://t.me/xaiworkspacebot?start=${this.code}`
+      ? `https://t.me/xaiworkspacebot?start=${encodeURIComponent(this.code)}`
       : 'https://t.me/xaiworkspacebot';
     this.tg.showBackButton(this.backHandler);
   }
