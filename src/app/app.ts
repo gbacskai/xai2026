@@ -7,6 +7,7 @@ import { ChatService } from './services/chat.service';
 import { AgentsService } from './services/agents.service';
 import { ChatPanelComponent } from './components/chat-panel/chat-panel';
 import { AgentsPanelComponent } from './components/agents-panel/agents-panel';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -320,6 +321,22 @@ export class App implements OnInit {
   ngOnInit() {
     this.tg.init();
     this.i18n.detect();
+    this.initGtag();
+  }
+
+  private initGtag() {
+    const id = environment.gtagId;
+    if (!id) return;
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+    document.head.appendChild(script);
+
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    function gtag(...args: any[]) { (window as any).dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', id);
   }
 
   toggleSidebar() {

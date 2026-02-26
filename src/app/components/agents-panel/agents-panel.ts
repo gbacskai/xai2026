@@ -78,6 +78,10 @@ export class AgentsPanelComponent implements OnInit {
   // Delete state
   showDeleteConfirm = signal(false);
 
+  // Invite state
+  inviteEmail = '';
+  inviteMessage = '';
+
   // Preview state
   showEditPreview = signal(false);
   showCreatePreview = signal(false);
@@ -256,6 +260,18 @@ export class AgentsPanelComponent implements OnInit {
     const cmd = `/subagents spawn main "Read and execute Agents/${agent.filename}" --model ${model}`;
     this.chat.isOpen.set(true);
     this.chat.pendingInput.set(cmd);
+  }
+
+  // --- Invite ---
+  sendInvite(): void {
+    const email = this.inviteEmail.trim();
+    if (!email) return;
+    const msg = this.inviteMessage.trim();
+    const cmd = msg ? `/invite ${email} "${msg}"` : `/invite ${email}`;
+    this.chat.send(cmd);
+    this.chat.isOpen.set(true);
+    this.inviteEmail = '';
+    this.inviteMessage = '';
   }
 
   private resetState(): void {

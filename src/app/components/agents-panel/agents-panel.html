@@ -154,4 +154,11 @@
       }
     }
   </div>
+
+  <div class="agents-invite">
+    <div class="agents-invite-title">Invite Friends</div>
+    <input type="email" class="agents-invite-input" [(ngModel)]="inviteEmail" placeholder="Email address" />
+    <textarea class="agents-invite-textarea" [(ngModel)]="inviteMessage" placeholder="Personal message (optional)" rows="2"></textarea>
+    <button class="agents-btn-primary" [disabled]="!inviteEmail.trim()" (click)="sendInvite()">Send Invite</button>
+  </div>
 </div>

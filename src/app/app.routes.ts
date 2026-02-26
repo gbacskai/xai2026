@@ -6,6 +6,7 @@ import { TermsPage } from './pages/terms/terms';
 import { AuthorizePage } from './pages/authorize/authorize';
 import { InvitePage } from './pages/invite/invite';
 import { ModelsPage } from './pages/models/models';
+import { PurchaseCompletePage } from './pages/purchase-complete/purchase-complete';
 
 export const routes: Routes = [
   { path: '', component: HomePage },
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'invite', component: InvitePage },
   { path: 'models', component: ModelsPage },
   { path: 'privacy', component: PrivacyPage },
+  { path: 'purchase-complete', component: PurchaseCompletePage },
   { path: 'terms', component: TermsPage },
   { path: '**', redirectTo: '' },
 ];
