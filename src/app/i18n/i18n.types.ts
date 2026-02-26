@@ -42,6 +42,14 @@ export interface UiStrings {
   'chat.linkSuccess': string;
   'chat.disconnected': string;
   'footer.logout': string;
+  'agents.title': string;
+  'agents.generate': string;
+  'agents.generating': string;
+  'agents.placeholder': string;
+  'agents.empty': string;
+  'agents.loading': string;
+  'agents.back': string;
+  'agents.error': string;
   'invite.title': string;
   'invite.subtitle': string;
   'invite.headline': string;

@@ -1,0 +1,49 @@
+<div class="agents-panel">
+  <div class="agents-header">
+    <span class="agents-header-title">{{ i18n.t('agents.title') }}</span>
+    <button class="agents-close" (click)="agents.toggle()" aria-label="Close agents">&times;</button>
+  </div>
+
+  <div class="agents-actions">
+    <textarea
+      class="agents-instruction"
+      [(ngModel)]="instruction"
+      [placeholder]="i18n.t('agents.placeholder')"
+      rows="2"></textarea>
+    <button
+      class="agents-generate-btn"
+      [disabled]="agents.isGenerating()"
+      (click)="onGenerate()">
+      {{ agents.isGenerating() ? i18n.t('agents.generating') : i18n.t('agents.generate') }}
+    </button>
+    @if (agents.generateResult()) {
+      <div class="agents-generate-result">{{ agents.generateResult() }}</div>
+    }
+  </div>
+
+  <div class="agents-body">
+    @if (agents.selectedAgent(); as agent) {
+      <div class="agents-detail">
+        <button class="agents-back-btn" (click)="goBack()">
+          {{ i18n.t('agents.back') }}
+        </button>
+        <div class="agents-detail-name">{{ agent.name }}</div>
+        <div class="agents-detail-content" [innerHTML]="renderedContent()"></div>
+      </div>
+    } @else {
+      @if (agents.isLoading()) {
+        <div class="agents-empty">{{ i18n.t('agents.loading') }}</div>
+      } @else if (agents.agents().length === 0) {
+        <div class="agents-empty">{{ i18n.t('agents.empty') }}</div>
+      } @else {
+        <div class="agents-list">
+          @for (agent of agents.agents(); track agent.filename) {
+            <button class="agents-list-item" (click)="selectAgent(agent.filename)">
+              {{ agent.name }}
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>
