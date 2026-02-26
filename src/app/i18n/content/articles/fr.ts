@@ -116,15 +116,58 @@ Vous pouvez utiliser n'importe quel client SFTP pour envoyer et télécharger de
 sftp -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 \`\`\`
 
-Ou utilisez un client graphique comme **FileZilla**, **Cyberduck** ou **WinSCP** :
+### FileZilla — Configuration étape par étape
+
+FileZilla est un client SFTP gratuit et multiplateforme. Suivez ces étapes pour vous connecter à votre espace de travail :
+
+#### 1. Télécharger et installer FileZilla
+
+Téléchargez FileZilla Client (pas Server) depuis [filezilla-project.org](https://filezilla-project.org). Disponible pour Windows, macOS et Linux.
+
+#### 2. Ouvrir le Gestionnaire de sites
+
+Lancez FileZilla et allez dans **Fichier → Gestionnaire de sites** (ou appuyez sur **Ctrl+S** sous Windows/Linux, **Cmd+S** sous macOS).
+
+#### 3. Créer un nouveau site
+
+1. Cliquez sur **Nouveau site**
+2. Nommez-le **xAI Workspace**
+
+#### 4. Entrer les paramètres de connexion
+
+Remplissez le panneau de droite :
 
 | Paramètre | Valeur |
 |---|---|
-| **Protocole** | SFTP |
+| **Protocole** | SFTP - Protocole de transfert de fichiers SSH |
 | **Hôte** | ssh.xaiworkspace.com |
 | **Port** | 22 |
-| **Nom d'utilisateur** | xai\`<chatId>\` |
-| **Authentification** | Fichier de clé (.pem fourni par \`/ssh\`) |
+| **Type d'authentification** | Fichier de clé |
+| **Utilisateur** | xai\`<chatId>\` |
+
+#### 5. Ajouter votre fichier de clé
+
+1. Dans le champ **Fichier de clé**, cliquez sur **Parcourir...**
+2. Sélectionnez le fichier \`.pem\` téléchargé depuis \`/ssh\`
+3. Si FileZilla propose de convertir la clé au format PPK, cliquez sur **Oui** — une copie convertie sera sauvegardée automatiquement
+
+> Sous macOS ou Linux, assurez-vous d'avoir exécuté \`chmod 600\` sur le fichier .pem au préalable.
+
+#### 6. Se connecter
+
+1. Cliquez sur **Connexion**
+2. Lors de la première connexion, FileZilla affiche une boîte de dialogue « Clé d'hôte inconnue » — vérifiez les détails et cliquez sur **OK** pour faire confiance au serveur
+
+#### 7. Transférer des fichiers
+
+- Le **panneau gauche** affiche vos fichiers locaux
+- Le **panneau droit** affiche les fichiers de votre espace de travail
+- **Glissez-déposez** des fichiers entre les panneaux pour envoyer ou télécharger
+- **Clic droit** pour renommer, supprimer et modifier les permissions
+
+> **Astuce :** Votre site est enregistré dans le Gestionnaire de sites. La prochaine fois, ouvrez le Gestionnaire de sites et double-cliquez sur **xAI Workspace** pour vous reconnecter instantanément.
+
+D'autres clients SFTP graphiques comme **Cyberduck** et **WinSCP** fonctionnent aussi — utilisez les mêmes paramètres d'hôte, port, nom d'utilisateur et fichier de clé ci-dessus.
 
 ## Ce que vous pouvez faire
 

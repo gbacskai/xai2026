@@ -116,15 +116,58 @@ Você pode usar qualquer cliente SFTP para enviar e baixar arquivos:
 sftp -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 \`\`\`
 
-Ou use um cliente gráfico como **FileZilla**, **Cyberduck** ou **WinSCP**:
+### FileZilla — Configuração passo a passo
+
+O FileZilla é um cliente SFTP gratuito e multiplataforma. Siga estes passos para se conectar ao seu workspace:
+
+#### 1. Baixar e instalar o FileZilla
+
+Baixe o FileZilla Client (não o Server) em [filezilla-project.org](https://filezilla-project.org). Disponível para Windows, macOS e Linux.
+
+#### 2. Abrir o Gerenciador de Sites
+
+Abra o FileZilla e vá em **Arquivo → Gerenciador de Sites** (ou pressione **Ctrl+S** no Windows/Linux, **Cmd+S** no macOS).
+
+#### 3. Criar um novo site
+
+1. Clique em **Novo Site**
+2. Nomeie como **xAI Workspace**
+
+#### 4. Inserir as configurações de conexão
+
+Preencha o painel à direita:
 
 | Configuração | Valor |
 |---|---|
-| **Protocolo** | SFTP |
+| **Protocolo** | SFTP - Protocolo de Transferência de Arquivos SSH |
 | **Host** | ssh.xaiworkspace.com |
 | **Porta** | 22 |
+| **Tipo de logon** | Arquivo de chave |
 | **Usuário** | xai\`<chatId>\` |
-| **Autenticação** | Arquivo de chave (.pem obtido com \`/ssh\`) |
+
+#### 5. Adicionar seu arquivo de chave
+
+1. No campo **Arquivo de chave**, clique em **Procurar...**
+2. Selecione o arquivo \`.pem\` que você baixou do \`/ssh\`
+3. Se o FileZilla pedir para converter a chave para o formato PPK, clique em **Sim** — ele salvará uma cópia convertida automaticamente
+
+> No macOS ou Linux, certifique-se de ter executado \`chmod 600\` no arquivo .pem primeiro.
+
+#### 6. Conectar
+
+1. Clique em **Conectar**
+2. Na primeira conexão, o FileZilla exibe um diálogo de "Chave de host desconhecida" — verifique os detalhes e clique em **OK** para confiar no servidor
+
+#### 7. Transferir arquivos
+
+- O **painel esquerdo** mostra seus arquivos locais
+- O **painel direito** mostra os arquivos do seu workspace
+- **Arraste e solte** arquivos entre os painéis para enviar ou baixar
+- **Clique com o botão direito** para opções de renomear, excluir e permissões
+
+> **Dica:** Seu site fica salvo no Gerenciador de Sites. Da próxima vez, abra o Gerenciador de Sites e clique duas vezes em **xAI Workspace** para reconectar instantaneamente.
+
+Outros clientes SFTP gráficos como **Cyberduck** e **WinSCP** também funcionam — use as mesmas configurações de host, porta, usuário e arquivo de chave acima.
 
 ## O que você pode fazer
 

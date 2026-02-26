@@ -116,15 +116,58 @@ Du kannst jeden SFTP-Client zum Hoch- und Herunterladen von Dateien verwenden:
 sftp -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 \`\`\`
 
-Oder verwende einen grafischen Client wie **FileZilla**, **Cyberduck** oder **WinSCP**:
+### FileZilla — Schritt-für-Schritt-Einrichtung
+
+FileZilla ist ein kostenloser, plattformübergreifender SFTP-Client. Folge diesen Schritten, um dich mit deinem Workspace zu verbinden:
+
+#### 1. FileZilla herunterladen und installieren
+
+Lade FileZilla Client (nicht Server) von [filezilla-project.org](https://filezilla-project.org) herunter. Verfügbar für Windows, macOS und Linux.
+
+#### 2. Servermanager öffnen
+
+Starte FileZilla und gehe zu **Datei → Servermanager** (oder drücke **Strg+S** unter Windows/Linux, **Cmd+S** unter macOS).
+
+#### 3. Neuen Server anlegen
+
+1. Klicke auf **Neuer Server**
+2. Benenne ihn **xAI Workspace**
+
+#### 4. Verbindungseinstellungen eingeben
+
+Fülle das rechte Panel aus:
 
 | Einstellung | Wert |
 |---|---|
-| **Protokoll** | SFTP |
+| **Protokoll** | SFTP - SSH File Transfer Protocol |
 | **Host** | ssh.xaiworkspace.com |
 | **Port** | 22 |
-| **Benutzername** | xai\`<chatId>\` |
-| **Authentifizierung** | Schlüsseldatei (.pem aus \`/ssh\`) |
+| **Verbindungsart** | Schlüsseldatei |
+| **Benutzer** | xai\`<chatId>\` |
+
+#### 5. Schlüsseldatei hinzufügen
+
+1. Klicke im Feld **Schlüsseldatei** auf **Durchsuchen...**
+2. Wähle die \`.pem\`-Datei aus, die du von \`/ssh\` heruntergeladen hast
+3. Wenn FileZilla fragt, ob der Schlüssel ins PPK-Format konvertiert werden soll, klicke auf **Ja** — eine konvertierte Kopie wird automatisch gespeichert
+
+> Unter macOS oder Linux stelle sicher, dass du zuvor \`chmod 600\` auf die .pem-Datei angewendet hast.
+
+#### 6. Verbinden
+
+1. Klicke auf **Verbinden**
+2. Bei der ersten Verbindung zeigt FileZilla einen Dialog „Unbekannter Hostschlüssel" — prüfe die Details und klicke auf **OK**, um dem Server zu vertrauen
+
+#### 7. Dateien übertragen
+
+- Das **linke Panel** zeigt deine lokalen Dateien
+- Das **rechte Panel** zeigt deine Workspace-Dateien
+- **Drag & Drop** zwischen den Panels zum Hoch- oder Herunterladen
+- **Rechtsklick** für Umbenennen, Löschen und Berechtigungsoptionen
+
+> **Tipp:** Dein Server ist im Servermanager gespeichert. Beim nächsten Mal einfach den Servermanager öffnen und **xAI Workspace** doppelklicken, um sofort wieder verbunden zu sein.
+
+Andere grafische SFTP-Clients wie **Cyberduck** und **WinSCP** funktionieren ebenfalls — verwende die gleichen Host-, Port-, Benutzername- und Schlüsseldatei-Einstellungen von oben.
 
 ## Was du tun kannst
 

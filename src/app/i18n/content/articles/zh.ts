@@ -116,15 +116,58 @@ ssh -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 sftp -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 \`\`\`
 
-或使用图形化客户端，如 **FileZilla**、**Cyberduck** 或 **WinSCP**：
+### FileZilla — 分步设置指南
+
+FileZilla 是一个免费的跨平台 SFTP 客户端。按以下步骤连接到您的工作区：
+
+#### 1. 下载并安装 FileZilla
+
+从 [filezilla-project.org](https://filezilla-project.org) 下载 FileZilla Client（不是 Server）。支持 Windows、macOS 和 Linux。
+
+#### 2. 打开站点管理器
+
+启动 FileZilla，点击 **文件 → 站点管理器**（或按 Windows/Linux 上的 **Ctrl+S**，macOS 上的 **Cmd+S**）。
+
+#### 3. 新建站点
+
+1. 点击 **新站点**
+2. 命名为 **xAI Workspace**
+
+#### 4. 输入连接设置
+
+在右侧面板中填写：
 
 | 设置 | 值 |
 |---|---|
-| **协议** | SFTP |
+| **协议** | SFTP - SSH 文件传输协议 |
 | **主机** | ssh.xaiworkspace.com |
 | **端口** | 22 |
-| **用户名** | xai\`<chatId>\` |
-| **身份验证** | 密钥文件（来自 \`/ssh\` 的 .pem 文件） |
+| **登录类型** | 密钥文件 |
+| **用户** | xai\`<chatId>\` |
+
+#### 5. 添加密钥文件
+
+1. 在 **密钥文件** 字段中，点击 **浏览...**
+2. 选择您从 \`/ssh\` 下载的 \`.pem\` 文件
+3. 如果 FileZilla 提示将密钥转换为 PPK 格式，请点击 **是** — 它会自动保存转换后的副本
+
+> 在 macOS 或 Linux 上，请确保先对 .pem 文件执行了 \`chmod 600\`。
+
+#### 6. 连接
+
+1. 点击 **连接**
+2. 首次连接时，FileZilla 会显示"未知主机密钥"对话框 — 核实信息后点击 **确定** 信任该服务器
+
+#### 7. 传输文件
+
+- **左侧面板** 显示您的本地文件
+- **右侧面板** 显示工作区文件
+- 在面板之间 **拖放** 文件即可上传或下载
+- **右键** 可进行重命名、删除和权限设置等操作
+
+> **提示：** 您的站点已保存在站点管理器中。下次只需打开站点管理器，双击 **xAI Workspace** 即可立即重新连接。
+
+其他图形化 SFTP 客户端如 **Cyberduck** 和 **WinSCP** 同样适用 — 使用上方相同的主机、端口、用户名和密钥文件设置即可。
 
 ## 您可以做什么
 

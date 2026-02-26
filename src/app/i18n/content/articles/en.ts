@@ -116,15 +116,58 @@ You can use any SFTP client to upload and download files:
 sftp -i <chatId>-xaiworkspace.pem xai<chatId>@ssh.xaiworkspace.com
 \`\`\`
 
-Or use a graphical client like **FileZilla**, **Cyberduck**, or **WinSCP**:
+### FileZilla — Step-by-step setup
+
+FileZilla is a free, cross-platform SFTP client. Follow these steps to connect to your workspace:
+
+#### 1. Download and install FileZilla
+
+Download FileZilla Client (not Server) from [filezilla-project.org](https://filezilla-project.org). Available for Windows, macOS, and Linux.
+
+#### 2. Open the Site Manager
+
+Launch FileZilla and go to **File → Site Manager** (or press **Ctrl+S** on Windows/Linux, **Cmd+S** on macOS).
+
+#### 3. Create a new site
+
+1. Click **New Site**
+2. Name it **xAI Workspace**
+
+#### 4. Enter connection settings
+
+Fill in the right-hand panel:
 
 | Setting | Value |
 |---|---|
-| **Protocol** | SFTP |
+| **Protocol** | SFTP - SSH File Transfer Protocol |
 | **Host** | ssh.xaiworkspace.com |
 | **Port** | 22 |
-| **Username** | xai\`<chatId>\` |
-| **Authentication** | Key file (.pem from \`/ssh\`) |
+| **Logon Type** | Key file |
+| **User** | xai\`<chatId>\` |
+
+#### 5. Add your key file
+
+1. In the **Key file** field, click **Browse...**
+2. Select the \`.pem\` file you downloaded from \`/ssh\`
+3. If FileZilla asks to convert the key to PPK format, click **Yes** — it will save a converted copy automatically
+
+> On macOS or Linux, make sure you ran \`chmod 600\` on the .pem file first.
+
+#### 6. Connect
+
+1. Click **Connect**
+2. On the first connection, FileZilla shows an "Unknown host key" dialog — check the details and click **OK** to trust the server
+
+#### 7. Transfer files
+
+- The **left panel** shows your local files
+- The **right panel** shows your workspace files
+- **Drag and drop** files between panels to upload or download
+- **Right-click** for rename, delete, and permission options
+
+> **Tip:** Your site is saved in Site Manager. Next time, open Site Manager and double-click **xAI Workspace** to reconnect instantly.
+
+Other graphical SFTP clients like **Cyberduck** and **WinSCP** work too — use the same host, port, username, and key file settings above.
 
 ## What you can do
 
