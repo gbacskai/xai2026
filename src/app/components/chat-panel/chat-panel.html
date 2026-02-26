@@ -66,12 +66,26 @@
     }
   </div>
 
+  @if (commandMenuOpen()) {
+    <div class="command-menu">
+      @for (cmd of commandMatches(); track cmd.command; let i = $index) {
+        <button class="command-item"
+          [class.command-item--active]="i === commandSelectedIndex()"
+          (mousedown)="selectCommand(cmd)">
+          <span class="command-name">{{ cmd.command }}</span>
+          <span class="command-desc">{{ cmd.description }}</span>
+        </button>
+      }
+    </div>
+  }
+
   <div class="chat-input-bar">
     <textarea
       class="chat-input"
       [(ngModel)]="messageText"
       [placeholder]="i18n.t('chat.placeholder')"
       (keydown)="onKeydown($event)"
+      (input)="onInput()"
       rows="1"></textarea>
     <button class="chat-send"
       [disabled]="!messageText.trim()"

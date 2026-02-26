@@ -3,6 +3,25 @@ import { FormsModule } from '@angular/forms';
 import { ChatService, FileAttachment } from '../../services/chat.service';
 import { I18nService } from '../../i18n/i18n.service';
 
+const COMMANDS: { command: string; description: string }[] = [
+  { command: '/usage',      description: 'View your token usage and limits' },
+  { command: '/billing',    description: 'Manage subscription and payments' },
+  { command: '/models',     description: 'Show and switch AI models' },
+  { command: '/invoices',   description: 'View payment history' },
+  { command: '/region',     description: 'Switch server region' },
+  { command: '/language',   description: 'Change language' },
+  { command: '/cancel',     description: 'Cancel subscription' },
+  { command: '/privacy',    description: 'Privacy policy and data management' },
+  { command: '/authorize',  description: 'Connect third-party services' },
+  { command: '/ssh',        description: 'Download SSH key' },
+  { command: '/status_x',   description: 'Check instance status' },
+  { command: '/diagnostic', description: 'Run full stack health check' },
+  { command: '/invite',     description: 'Invite someone and earn free tokens' },
+  { command: '/invites',    description: 'List your sent invitations' },
+  { command: '/workspace',  description: 'View workspace file info' },
+  { command: '/help',       description: 'Show all available commands' },
+];
+
 @Component({
   selector: 'app-chat-panel',
   standalone: true,
@@ -15,6 +34,10 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   i18n = inject(I18nService);
 
   messageText = '';
+
+  commandMenuOpen = signal(false);
+  commandMatches = signal<{ command: string; description: string }[]>([]);
+  commandSelectedIndex = signal(0);
 
   @ViewChild('messageList') messageList!: ElementRef<HTMLDivElement>;
 
@@ -52,17 +75,58 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   send(): void {
+    this.commandMenuOpen.set(false);
     const text = this.messageText.trim();
     if (!text) return;
     this.chat.send(text);
     this.messageText = '';
   }
 
+  onInput(): void {
+    const text = this.messageText;
+    if (text.startsWith('/')) {
+      const query = text.slice(1).toLowerCase();
+      const matches = COMMANDS.filter(c => c.command.slice(1).startsWith(query));
+      this.commandMatches.set(matches);
+      this.commandMenuOpen.set(matches.length > 0);
+      this.commandSelectedIndex.set(0);
+    } else {
+      this.commandMenuOpen.set(false);
+    }
+  }
+
   onKeydown(event: KeyboardEvent): void {
+    if (this.commandMenuOpen()) {
+      const matches = this.commandMatches();
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault();
+          this.commandSelectedIndex.update(i => (i > 0 ? i - 1 : matches.length - 1));
+          return;
+        case 'ArrowDown':
+          event.preventDefault();
+          this.commandSelectedIndex.update(i => (i < matches.length - 1 ? i + 1 : 0));
+          return;
+        case 'Tab':
+        case 'Enter':
+          event.preventDefault();
+          this.selectCommand(matches[this.commandSelectedIndex()]);
+          return;
+        case 'Escape':
+          event.preventDefault();
+          this.commandMenuOpen.set(false);
+          return;
+      }
+    }
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.send();
     }
+  }
+
+  selectCommand(cmd: { command: string; description: string }): void {
+    this.messageText = cmd.command + ' ';
+    this.commandMenuOpen.set(false);
   }
 
   onCallback(data: string): void {
