@@ -7,24 +7,38 @@ import { I18nService } from '../../i18n/i18n.service';
 import { environment } from '../../../environments/environment';
 
 const COMMANDS: { command: string; description: string }[] = [
+  { command: '/help',       description: 'Show all available commands' },
+  { command: '/start',      description: 'Start your AI instance' },
+  { command: '/stop',       description: 'Stop your AI instance' },
+  { command: '/restart',    description: 'Restart your instance' },
+  { command: '/status',     description: 'Check instance status' },
+  { command: '/status_x',   description: 'Extended instance status' },
+  { command: '/diagnostic', description: 'Run full stack health check' },
   { command: '/usage',      description: 'View your token usage and limits' },
   { command: '/billing',    description: 'Manage subscription and payments' },
-  { command: '/models',     description: 'Show and switch AI models' },
   { command: '/invoices',   description: 'View payment history' },
+  { command: '/models',     description: 'Show and switch AI models' },
+  { command: '/config',     description: 'View or update instance config' },
+  { command: '/commands',   description: 'List all slash commands' },
   { command: '/region',     description: 'Switch server region' },
   { command: '/language',   description: 'Change language' },
   { command: '/cancel',     description: 'Cancel subscription' },
   { command: '/privacy',    description: 'Privacy policy and data management' },
   { command: '/authorize',  description: 'Connect third-party services' },
   { command: '/ssh',        description: 'Download SSH key' },
-  { command: '/restart',     description: 'Restart your instance' },
-  { command: '/status_x',   description: 'Check instance status' },
-  { command: '/diagnostic', description: 'Run full stack health check' },
   { command: '/invite',     description: 'Invite someone and earn free tokens' },
   { command: '/invites',    description: 'List your sent invitations' },
   { command: '/workspace',  description: 'View workspace file info' },
   { command: '/whoami',     description: 'Show your identity and linked accounts' },
-  { command: '/help',       description: 'Show all available commands' },
+  { command: '/memory',     description: 'View agent memory and context' },
+  { command: '/agents',     description: 'List and manage sub-agents' },
+  { command: '/subagents',  description: 'Spawn and manage sub-agents' },
+  { command: '/logs',       description: 'View instance logs' },
+  { command: '/clear',      description: 'Clear conversation history' },
+  { command: '/upgrade',    description: 'Upgrade your subscription' },
+  { command: '/downgrade',  description: 'Downgrade your subscription' },
+  { command: '/link',       description: 'Link another account' },
+  { command: '/unlink',     description: 'Unlink a connected account' },
 ];
 
 @Component({
@@ -82,8 +96,20 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!this.accountMenuOpen()) return;
     const target = event.target as HTMLElement;
+
+    // Handle clicks on /command links in bot messages
+    if (target.classList.contains('chat-cmd-link')) {
+      event.preventDefault();
+      const cmd = target.getAttribute('data-cmd');
+      if (cmd) {
+        this.tg.haptic();
+        this.chat.send(cmd);
+      }
+      return;
+    }
+
+    if (!this.accountMenuOpen()) return;
     if (!target.closest('.account-switcher')) {
       this.accountMenuOpen.set(false);
     }
@@ -230,7 +256,13 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   renderMarkdown(text: string): string {
-    return marked.parse(text, { async: false }) as string;
+    let html = marked.parse(text, { async: false }) as string;
+    // Make /command references clickable
+    html = html.replace(
+      /(?<!\w)\/([a-z_]{2,})(?!\w)/g,
+      (match, cmd) => `<a class="chat-cmd-link" data-cmd="/${cmd}" href="javascript:void(0)">${match}</a>`,
+    );
+    return html;
   }
 
   accountDisplayName(session: { chatId: string; provider: string }): string {
