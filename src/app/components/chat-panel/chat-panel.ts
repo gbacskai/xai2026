@@ -284,8 +284,9 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
       });
       if (!res.ok) return;
       const data = await res.json();
+      console.log('[usage-monitor] API response:', JSON.stringify(data, null, 2));
       const limits = data.limits;
-      if (!limits) return;
+      if (!limits) { console.warn('[usage-monitor] No limits in response'); return; }
 
       // Daily: sum today's spend from hourly data
       const hourlyArr = data.hourly as { spend: number }[] | undefined;
@@ -296,6 +297,8 @@ export class ChatPanelComponent implements OnInit, OnDestroy, AfterViewChecked {
       // Monthly: sum all entries in monthly data (current billing period)
       const monthlyArr = data.monthly as { spend: number }[] | undefined;
       const monthlySpend = monthlyArr?.reduce((s, m) => s + (m.spend || 0), 0) ?? 0;
+
+      console.log('[usage-monitor] daily:', dailySpend, '/', limits.dailyCap, '| weekly:', weeklySpend, '/', limits.weeklyCap, '| monthly:', monthlySpend, '/', limits.monthlyCap);
 
       const pct = (spend: number, cap: number) => cap > 0 ? Math.min(100, Math.round((spend / cap) * 100)) : 0;
       this.usageDaily.set(pct(dailySpend, limits.dailyCap));
