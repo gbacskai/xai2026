@@ -94,7 +94,7 @@
     }
     @if (chat.messages().length === 0 && !chat.botTyping()) {
       <div class="chat-empty">
-        <div class="chat-empty-hint">Type <strong>/help</strong> to see available commands</div>
+        <div class="chat-empty-hint">Type <a class="chat-cmd-link" data-cmd="/help" href="javascript:void(0)">/help</a> to see available commands</div>
       </div>
     }
   </div>
