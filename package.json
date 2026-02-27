@@ -13,7 +13,11 @@
     "build:mobile": "ng build --configuration production && npx cap sync",
     "cap:sync": "npx cap sync",
     "open:ios": "npx cap open ios",
-    "open:android": "npx cap open android"
+    "open:android": "npx cap open android",
+    "gplay:auth": "node scripts/google-play-publish.mjs auth",
+    "gplay:build": "node scripts/google-play-publish.mjs build",
+    "gplay:publish": "node scripts/google-play-publish.mjs publish",
+    "gplay:upload": "node scripts/google-play-publish.mjs upload"
   },
   "prettier": {
     "printWidth": 100,

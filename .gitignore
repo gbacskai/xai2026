@@ -48,6 +48,11 @@ playwright/.cache/
 /ios/App/Pods/
 /android/.gradle/
 /android/app/build/
+/android/keystore.properties
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
 
 # System files
 .DS_Store
