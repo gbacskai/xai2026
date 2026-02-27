@@ -29,6 +29,7 @@ import { createReadStream, existsSync, readFileSync, writeFileSync, statSync } f
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
+import { createSign } from 'node:crypto';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,8 @@ const AAB_PATH = join(ANDROID_DIR, 'app/build/outputs/bundle/release/app-release
 const TOKEN_PATH = join(homedir(), '.config', 'xaiworkspace', 'google-play-token.json');
 const KEYSTORE_PATH = join(homedir(), '.config', 'xaiworkspace', 'release.keystore');
 const KEYSTORE_PROPS_PATH = join(ANDROID_DIR, 'keystore.properties');
+
+const SERVICE_ACCOUNT_PATH = join(homedir(), '.config', 'xaiworkspace', 'xaiworkspace-c7e88e486380.json');
 
 const CLIENT_ID = process.env.GOOGLE_PLAY_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_PLAY_CLIENT_SECRET;
@@ -68,6 +71,59 @@ function log(msg) {
 function die(msg) {
   console.error(`\n[ERROR] ${msg}\n`);
   process.exit(1);
+}
+
+// ── Service Account JWT Auth ─────────────────────────────────────────────────
+
+function loadServiceAccount() {
+  if (!existsSync(SERVICE_ACCOUNT_PATH)) return null;
+  try {
+    return JSON.parse(readFileSync(SERVICE_ACCOUNT_PATH, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function base64url(data) {
+  return Buffer.from(data).toString('base64url');
+}
+
+async function getServiceAccountToken() {
+  const sa = loadServiceAccount();
+  if (!sa) die(`Service account key not found at ${SERVICE_ACCOUNT_PATH}`);
+
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = base64url(JSON.stringify({
+    iss: sa.client_email,
+    scope: SCOPE,
+    aud: sa.token_uri,
+    iat: now,
+    exp: now + 3600,
+  }));
+
+  const sign = createSign('RSA-SHA256');
+  sign.update(`${header}.${payload}`);
+  const signature = sign.sign(sa.private_key, 'base64url');
+
+  const jwt = `${header}.${payload}.${signature}`;
+
+  const res = await fetch(sa.token_uri, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    die(`Service account token exchange failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  return data.access_token;
 }
 
 // ── OAuth2 ──────────────────────────────────────────────────────────────────
@@ -137,9 +193,18 @@ function loadToken() {
 }
 
 async function getAccessToken() {
+  // Prefer service account if available
+  const sa = loadServiceAccount();
+  if (sa) {
+    log('Using service account authentication...');
+    return getServiceAccountToken();
+  }
+
+  // Fall back to OAuth2
+  log('Using OAuth2 authentication...');
   const stored = loadToken();
   if (!stored?.refresh_token) {
-    die('No refresh token found. Run: node scripts/google-play-publish.mjs auth');
+    die('No refresh token or service account found. Run: node scripts/google-play-publish.mjs auth');
   }
   const data = await refreshAccessToken(stored.refresh_token);
   // Preserve refresh token (Google doesn't always return it on refresh)
@@ -216,25 +281,40 @@ function doSetupKeystore() {
 
   ensureDir(KEYSTORE_PATH);
   log('Generating release signing keystore...');
+
+  const keyPath = KEYSTORE_PATH.replace('.keystore', '.key');
+  const certPath = KEYSTORE_PATH.replace('.keystore', '.pem');
+  const storePass = 'xaiworkspace';
+
+  // Generate RSA key + self-signed cert with OpenSSL (no Java/keytool needed)
   run(
-    `keytool -genkeypair -v ` +
-    `-keystore "${KEYSTORE_PATH}" ` +
-    `-alias ${APP_NAME} ` +
-    `-keyalg RSA -keysize 2048 -validity 10000 ` +
-    `-storepass xaiworkspace -keypass xaiworkspace ` +
-    `-dname "CN=xAI Workspace, OU=Mobile, O=xShopper Pty Ltd, L=Sydney, ST=NSW, C=AU"`,
+    `openssl req -newkey rsa:2048 -nodes -keyout "${keyPath}" ` +
+    `-x509 -days 10000 -out "${certPath}" ` +
+    `-subj "/CN=xAI Workspace/OU=Mobile/O=xShopper Pty Ltd/L=Sydney/ST=NSW/C=AU"`,
   );
+
+  // Package into PKCS12 keystore (Gradle accepts PKCS12 just like JKS)
+  run(
+    `openssl pkcs12 -export -in "${certPath}" -inkey "${keyPath}" ` +
+    `-out "${KEYSTORE_PATH}" -name "${APP_NAME}" ` +
+    `-password pass:${storePass}`,
+  );
+
+  // Clean up intermediate files
+  execSync(`rm -f "${keyPath}" "${certPath}"`);
 
   // Write keystore.properties for Gradle
   const props = [
     `storeFile=${KEYSTORE_PATH}`,
-    `storePassword=xaiworkspace`,
+    `storePassword=${storePass}`,
     `keyAlias=${APP_NAME}`,
-    `keyPassword=xaiworkspace`,
+    `keyPassword=${storePass}`,
   ].join('\n');
   writeFileSync(KEYSTORE_PROPS_PATH, props + '\n', 'utf-8');
+  log(`Keystore created at ${KEYSTORE_PATH}`);
   log(`Keystore properties written to ${KEYSTORE_PROPS_PATH}`);
   log('IMPORTANT: Change the default passwords before production use!');
+  log('IMPORTANT: Back up this keystore! You cannot update your app without it.');
 }
 
 // ── Build ───────────────────────────────────────────────────────────────────
@@ -318,7 +398,8 @@ async function doUpload(track = 'internal') {
   log(`AAB uploaded. Version code: ${versionCode}`);
 
   // Step 3: Assign to track
-  log(`Assigning to ${track} track...`);
+  const releaseStatus = process.argv.includes('--draft') ? 'draft' : 'completed';
+  log(`Assigning to ${track} track (status: ${releaseStatus})...`);
   res = await fetch(
     `${API_BASE}/${PACKAGE_NAME}/edits/${editId}/tracks/${track}`,
     {
@@ -329,7 +410,7 @@ async function doUpload(track = 'internal') {
         releases: [
           {
             versionCodes: [String(versionCode)],
-            status: 'completed',
+            status: releaseStatus,
             releaseNotes: [
               {
                 language: 'en-US',
@@ -464,16 +545,20 @@ switch (command) {
     doBuild();
     break;
 
-  case 'upload':
-    await doUpload(process.argv[3] || 'internal');
+  case 'upload': {
+    const trackArg = process.argv.slice(3).find(a => !a.startsWith('--')) || 'internal';
+    await doUpload(trackArg);
     break;
+  }
 
-  case 'publish':
+  case 'publish': {
     ensureGradleSigning();
     bumpVersionCode();
     doBuild();
-    await doUpload(process.argv[3] || 'internal');
+    const trackArg2 = process.argv.slice(3).find(a => !a.startsWith('--')) || 'internal';
+    await doUpload(trackArg2);
     break;
+  }
 
   case 'bump':
     bumpVersionCode();
