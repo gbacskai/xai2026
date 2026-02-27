@@ -1,59 +1,88 @@
 # xAI Workspace
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4.
+AI agent workspace for SME business clients. Angular 21 SPA delivered across web, Telegram WebApp, and native iOS/Android via Capacitor 8.
 
-## Development server
+## Platforms
 
-To start a local development server, run:
+| Channel | Runtime | Status |
+|---------|---------|--------|
+| Web | Angular SPA on AWS Amplify | Production |
+| Telegram | Embedded WebApp | Production |
+| iOS | Capacitor 8 native shell | In development |
+| Android | Capacitor 8 native shell | In development |
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Quick Start
 
 ```bash
-ng generate component component-name
+npm install
+npm start            # Dev server at localhost:4200
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Build
 
 ```bash
-ng generate --help
+npm run build                # Web production build
+npm run build:mobile         # Web build + Capacitor sync
+npm run open:ios             # Open Xcode project
+npm run open:android         # Open Android Studio project
 ```
 
-## Building
-
-To build the project run:
+## Test
 
 ```bash
-ng build
+npm run e2e                  # Playwright E2E tests
+npm run e2e:headed           # Headed browser mode
+npm run e2e:ui               # Interactive test UI
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Tech Stack
 
-## Running unit tests
+- **Framework**: Angular 21.1 (standalone components, signals)
+- **Language**: TypeScript 5.9 (strict)
+- **Native**: Capacitor 8.1 (iOS + Android)
+- **Styling**: SCSS with CSS custom properties
+- **Charts**: Chart.js 4.5
+- **i18n**: Custom system, 16 languages, RTL support
+- **Auth**: Google, GitHub, LinkedIn OAuth + Telegram Login
+- **Realtime**: WebSocket chat with auto-reconnect
+- **Testing**: Playwright
+- **Deployment**: AWS Amplify (web), App Store / Google Play (native)
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Project Structure
 
-```bash
-ng test
+```
+src/app/
+  app.ts                 # Root component (3-panel responsive layout)
+  app.routes.ts          # Route definitions
+  components/            # Shared components (chat-panel, agents-panel, toast, back-button)
+  pages/                 # Route pages (home, about, analytics, article, invite, models, ...)
+  services/              # Injectable services (auth, chat, telegram, platform, storage, ...)
+  i18n/                  # Translations (16 languages x 6 content areas + UI strings)
+ios/                     # Xcode project (Capacitor-generated)
+android/                 # Android Studio project (Capacitor-generated)
+Documents/               # Architecture and GDPR compliance docs
+e2e/                     # Playwright test specs
 ```
 
-## Running end-to-end tests
+## Native Mobile (Capacitor)
 
-For end-to-end (e2e) testing, run:
+The app is wrapped in native iOS and Android shells using Capacitor 8. Native features:
 
-```bash
-ng e2e
-```
+- **Push notifications** via FCM/APNs (`@capacitor/push-notifications`)
+- **Biometric auth** via Face ID/Touch ID/Fingerprint (`@capgo/capacitor-native-biometric`)
+- **Deep links** via Universal Links (iOS) and App Links (Android) (`@capacitor/app`)
+- **Native OAuth** via in-app browser + custom scheme callback (`@capacitor/browser`)
+- **Haptic feedback** extending Telegram haptics to native (`@capacitor/haptics`)
+- **Safe area** insets for notch/Dynamic Island
+- **Keyboard** height tracking for chat input (`@capacitor/keyboard`)
+- **Persistent storage** via `@capacitor/preferences` (replaces sessionStorage on native)
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+See [Documents/Architecture.md](Documents/Architecture.md) for full architecture documentation.
 
-## Additional Resources
+## Documentation
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- [Architecture](Documents/Architecture.md) — Frontend architecture, service design, build pipeline
+- [GDPR Audit](Documents/GDPR-Audit-2026-02-22.md) — Compliance audit with 44+ findings
+- [DPIA](Documents/GDPR-DPIA.md) — Data Protection Impact Assessment
+- [RoPA](Documents/GDPR-RoPA.md) — Records of Processing Activities
+- [Breach Response](Documents/GDPR-Breach-Response-Plan.md) — Incident response procedures

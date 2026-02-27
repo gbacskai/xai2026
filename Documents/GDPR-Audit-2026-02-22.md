@@ -6,6 +6,7 @@
 **Auditor:** GDPR Compliance Auditor Agent
 **Platform Status:** Plan only — not yet active (per CLAUDE.md)
 **Audit Scope:** Full codebase — router.js, clients.js, billing.js, invites.js, emailer.js, provisioner.js, gateway.js, all src/ modules, all Infrastructure/ scripts, litellm-config.yaml, .env, .platform/ hooks
+**Update (2026-02-27):** iOS and Android native app shells added via Capacitor 8. New data processing considerations: device push tokens (FCM/APNs) sent to backend, biometric credentials stored in native keychain, deep link routing for OAuth callbacks. See `Documents/Architecture.md` for technical details. The DPIA, RoPA, and DPA Tracker should be updated to reflect the additional processors (Apple APNs, Google FCM) and data categories (device tokens, biometric availability flags) before the mobile apps are published to the App Store / Google Play.
 
 ---
 
