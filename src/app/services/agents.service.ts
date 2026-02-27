@@ -108,22 +108,36 @@ export class AgentsService {
         if (msg.error) {
           this.operationError.set(msg.error);
         } else {
+          const deletedName = msg.name || '';
           this.selectedAgent.set(null);
-          this.refreshList();
+          // Optimistic: remove from local list immediately
+          this.agents.update(list => list.filter(a =>
+            a.filename !== deletedName &&
+            a.filename !== deletedName + '.md' &&
+            a.filename !== deletedName.replace(/\.md$/, ''),
+          ));
           this.syncAgentsMd();
         }
+        break;
+      case 'agents_sync_md_result':
+        // AGENTS.md has been regenerated — refresh list for accurate data
+        this.refreshList();
         break;
       case 'agents_create_result':
         this.isSaving.set(false);
         if (msg.error) {
           this.operationError.set(msg.error);
         } else {
-          this.refreshList();
-          this.syncAgentsMd();
-          // Select the newly created agent
           if (msg.filename) {
+            // Optimistic: add to local list immediately
+            const newName = msg.filename.replace(/\.md$/, '').replace(/([a-z])([A-Z])/g, '$1 $2');
+            this.agents.update(list => {
+              if (list.some(a => a.filename === msg.filename)) return list;
+              return [...list, { name: newName, filename: msg.filename, priority: 'medium' }];
+            });
             this.getAgent(msg.filename);
           }
+          this.syncAgentsMd();
         }
         break;
     }

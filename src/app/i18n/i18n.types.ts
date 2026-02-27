@@ -207,6 +207,9 @@ export interface UiStrings {
   'agents.inviteMessagePlaceholder': string;
   'agents.inviteSend': string;
   'chat.reconnect': string;
+  'chat.usageDaily': string;
+  'chat.usageWeekly': string;
+  'chat.usageMonthly': string;
   'panel.agents': string;
   'panel.analytics': string;
   'panel.recommendations': string;

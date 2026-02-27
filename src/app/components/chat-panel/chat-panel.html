@@ -17,9 +17,9 @@
     </div>
     @if (usageLoaded()) {
       <div class="usage-monitor">
-        <span class="usage-item" [class.usage-item--warn]="usageDaily() >= 80">D: {{ usageDaily() }}%</span>
-        <span class="usage-item" [class.usage-item--warn]="usageWeekly() >= 80">W: {{ usageWeekly() }}%</span>
-        <span class="usage-item" [class.usage-item--warn]="usageMonthly() >= 80">M: {{ usageMonthly() }}%</span>
+        <span class="usage-item" [class.usage-item--warn]="usageDaily() >= 80">{{ i18n.t('chat.usageDaily') }}: {{ usageDaily() }}%</span>
+        <span class="usage-item" [class.usage-item--warn]="usageWeekly() >= 80">{{ i18n.t('chat.usageWeekly') }}: {{ usageWeekly() }}%</span>
+        <span class="usage-item" [class.usage-item--warn]="usageMonthly() >= 80">{{ i18n.t('chat.usageMonthly') }}: {{ usageMonthly() }}%</span>
       </div>
     }
     @if (chat.sessions().length > 1) {

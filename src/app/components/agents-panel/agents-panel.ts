@@ -391,14 +391,11 @@ export class AgentsPanelComponent implements OnInit, OnDestroy {
 
   // --- Run ---
   runAgent(agent: AgentDetail): void {
-    if (!agent.content?.trim()) {
-      this.toast.show('Agent has no content', 'error');
-      return;
-    }
     this.tg.haptic();
-    const modelMatch = agent.content.match(/\*\*Model\*\*:\s*(\S+)/);
+    const modelMatch = agent.content?.match(/\*\*Model\*\*:\s*(\S+)/);
     const model = modelMatch?.[1] || 'claude-sonnet-4-6';
-    const cmd = `/subagents spawn main "Read and execute Agents/${agent.filename}" --model ${model}`;
+    const safeName = agent.filename.endsWith('.md') ? agent.filename : agent.filename + '.md';
+    const cmd = `/subagents spawn main "Read and execute Agents/${safeName}" --model ${model}`;
     this.chat.isOpen.set(true);
     this.chat.pendingInput.set(cmd);
     this.toast.show('Command copied to chat', 'info');
