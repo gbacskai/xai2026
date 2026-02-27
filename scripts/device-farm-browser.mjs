@@ -3,21 +3,34 @@
 /**
  * AWS Device Farm Desktop Browser Testing
  *
- * Runs smoke tests on real desktop browsers (Chrome, Firefox, Edge)
+ * Runs smoke tests on real desktop browsers (Chrome, Firefox)
  * hosted by AWS Device Farm, against the live xAI Workspace site.
  *
- * Uses Selenium WebDriver with Device Farm's test grid endpoint.
+ * Supports both unauthenticated (public pages) and authenticated (chat, agents)
+ * test suites. Authenticated tests require a backend test endpoint.
  *
  * Prerequisites:
  *   1. AWS CLI profile aws_amplify_docflow4 with devicefarm permissions
  *   2. selenium-webdriver installed (npm install --save-dev selenium-webdriver)
+ *   3. For authenticated tests: DEVICEFARM_TEST_SECRET env var
  *
  * Usage:
- *   node scripts/device-farm-browser.mjs                          # All browsers
+ *   node scripts/device-farm-browser.mjs                          # All browsers, public tests
+ *   node scripts/device-farm-browser.mjs --auth                   # Include authenticated tests
  *   node scripts/device-farm-browser.mjs --browser chrome         # Chrome only
  *   node scripts/device-farm-browser.mjs --browser firefox        # Firefox only
  *   node scripts/device-farm-browser.mjs --url http://localhost:4200  # Test local dev
  *   node scripts/device-farm-browser.mjs --list-sessions          # List recent sessions
+ *
+ * Backend endpoint required for --auth:
+ *   GET https://router.xaiworkspace.com/auth/test/token?secret=<DEVICEFARM_TEST_SECRET>
+ *
+ *   Returns: { "provider": "google", "code": "...", "email": "test@...", "name": "Test User" }
+ *
+ *   This endpoint should:
+ *     - Validate the shared secret
+ *     - Return credentials for a dedicated test user
+ *     - Rate-limit to prevent abuse
  */
 
 import { execSync } from 'node:child_process';
@@ -29,17 +42,24 @@ const TEST_GRID_ARN = 'arn:aws:devicefarm:us-west-2:695829630004:testgrid-projec
 const AWS_PROFILE = 'aws_amplify_docflow4';
 const AWS_REGION = 'us-west-2';
 const DEFAULT_URL = 'https://xaiworkspace.com';
+const ROUTER_URL = 'https://router.xaiworkspace.com';
 
 const args = process.argv.slice(2);
 const BROWSER_ARG = args.includes('--browser') ? args[args.indexOf('--browser') + 1] : null;
 const TEST_URL = args.includes('--url') ? args[args.indexOf('--url') + 1] : DEFAULT_URL;
 const BROWSERS = BROWSER_ARG ? [BROWSER_ARG] : ['chrome', 'firefox'];
+const RUN_AUTH = args.includes('--auth');
+const TEST_SECRET = process.env.DEVICEFARM_TEST_SECRET;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function log(msg) { console.log(`[browser-test] ${msg}`); }
 function pass(msg) { console.log(`  \x1b[32m✓\x1b[0m ${msg}`); }
 function fail(msg) { console.log(`  \x1b[31m✗\x1b[0m ${msg}`); }
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
 
 function aws(command) {
   const fullCmd = `aws ${command} --profile ${AWS_PROFILE} --region ${AWS_REGION} --output json`;
@@ -57,12 +77,57 @@ function getTestGridUrl() {
   return result.url;
 }
 
-// ── Smoke Tests ─────────────────────────────────────────────────────────────
+// ── Test Auth Token ─────────────────────────────────────────────────────────
+
+async function fetchTestToken() {
+  if (!TEST_SECRET) {
+    return null;
+  }
+
+  log('Fetching test auth token from backend...');
+  const url = `${ROUTER_URL}/auth/test/token?secret=${encodeURIComponent(TEST_SECRET)}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    const text = await res.text();
+    log(`WARNING: Test token fetch failed: ${res.status} ${text}`);
+    return null;
+  }
+
+  const data = await res.json();
+  log(`Test token obtained for ${data.email || data.provider || 'test user'}`);
+  return data;
+}
 
 /**
- * Each test returns { name, passed, error? }
+ * Inject auth into sessionStorage via Selenium executeScript.
+ * Navigates to the site first (sessionStorage is origin-scoped),
+ * sets the auth data, then reloads so Angular picks it up.
  */
-const TESTS = [
+async function injectAuth(driver, testUser) {
+  // Navigate to the site to set sessionStorage on the correct origin
+  await driver.get(TEST_URL);
+  await driver.wait(until.elementLocated(By.css('body')), 10000);
+
+  // Inject the test user into sessionStorage (mirrors e2e/helpers/auth.helpers.ts)
+  const storageKey = `${testUser.provider}_user`;
+  await driver.executeScript(
+    `sessionStorage.setItem(arguments[0], arguments[1]);`,
+    storageKey,
+    JSON.stringify(testUser),
+  );
+
+  // Reload so Angular's AuthService picks up the injected session
+  await driver.navigate().refresh();
+  await driver.wait(until.elementLocated(By.css('body')), 10000);
+
+  // Wait for Angular to bootstrap and process the auth
+  await driver.sleep(2000);
+}
+
+// ── Public Tests (no auth required) ─────────────────────────────────────────
+
+const PUBLIC_TESTS = [
   {
     name: 'Home page loads with hero and title',
     run: async (driver) => {
@@ -158,13 +223,105 @@ const TESTS = [
   },
 ];
 
-function assert(condition, message) {
-  if (!condition) throw new Error(message);
-}
+// ── Authenticated Tests (require test token) ────────────────────────────────
+
+const AUTH_TESTS = [
+  {
+    name: '[auth] Login checkmark appears for test provider',
+    run: async (driver, testUser) => {
+      await injectAuth(driver, testUser);
+      const checkmark = await driver.findElement(By.css(`.login-box-item--${testUser.provider} .login-box-check`));
+      assert(await checkmark.isDisplayed(), `${testUser.provider} checkmark not visible after auth injection`);
+    },
+  },
+  {
+    name: '[auth] Chat FAB appears when authenticated',
+    run: async (driver, testUser) => {
+      await injectAuth(driver, testUser);
+      await driver.wait(until.elementLocated(By.css('.chat-fab')), 10000);
+      const fab = await driver.findElement(By.css('.chat-fab'));
+      assert(await fab.isDisplayed(), 'Chat FAB not visible after auth');
+    },
+  },
+  {
+    name: '[auth] Agents FAB appears when authenticated',
+    run: async (driver, testUser) => {
+      await injectAuth(driver, testUser);
+      await driver.wait(until.elementLocated(By.css('.agents-fab')), 10000);
+      const fab = await driver.findElement(By.css('.agents-fab'));
+      assert(await fab.isDisplayed(), 'Agents FAB not visible after auth');
+    },
+  },
+  {
+    name: '[auth] Chat panel opens when FAB is clicked',
+    run: async (driver, testUser) => {
+      await injectAuth(driver, testUser);
+      await driver.wait(until.elementLocated(By.css('.chat-fab')), 10000);
+
+      // On desktop the panel may auto-open; on mobile click the FAB
+      const fab = await driver.findElement(By.css('.chat-fab'));
+      if (await fab.isDisplayed()) {
+        await fab.click();
+      }
+      await driver.wait(until.elementLocated(By.css('.chat-panel')), 10000);
+      const panel = await driver.findElement(By.css('.chat-panel'));
+      assert(await panel.isDisplayed(), 'Chat panel not visible after clicking FAB');
+    },
+  },
+  {
+    name: '[auth] Chat input and send button exist',
+    run: async (driver, testUser) => {
+      await injectAuth(driver, testUser);
+      await driver.wait(until.elementLocated(By.css('.chat-fab')), 10000);
+
+      const fab = await driver.findElement(By.css('.chat-fab'));
+      if (await fab.isDisplayed()) {
+        await fab.click();
+      }
+      await driver.wait(until.elementLocated(By.css('.chat-input')), 10000);
+
+      const input = await driver.findElement(By.css('.chat-input'));
+      assert(await input.isDisplayed(), 'Chat input not visible');
+
+      const sendBtn = await driver.findElement(By.css('.chat-send'));
+      assert(await sendBtn.isDisplayed(), 'Send button not visible');
+    },
+  },
+  {
+    name: '[auth] Agents panel opens when FAB is clicked',
+    run: async (driver, testUser) => {
+      await injectAuth(driver, testUser);
+      await driver.wait(until.elementLocated(By.css('.agents-fab')), 10000);
+
+      const fab = await driver.findElement(By.css('.agents-fab'));
+      await fab.click();
+
+      await driver.wait(until.elementLocated(By.css('.agents-panel')), 10000);
+      const panel = await driver.findElement(By.css('.agents-panel'));
+      assert(await panel.isDisplayed(), 'Agents panel not visible after clicking FAB');
+    },
+  },
+  {
+    name: '[auth] Logout clears session and removes FABs',
+    run: async (driver, testUser) => {
+      await injectAuth(driver, testUser);
+      await driver.wait(until.elementLocated(By.css('.chat-fab')), 10000);
+
+      // Click logout
+      const logoutLink = await driver.findElement(By.css('.logout-link'));
+      await logoutLink.click();
+
+      // Wait for FABs to disappear
+      await driver.sleep(1000);
+      const fabs = await driver.findElements(By.css('.chat-fab'));
+      assert(fabs.length === 0, 'Chat FAB still visible after logout');
+    },
+  },
+];
 
 // ── Run Tests ───────────────────────────────────────────────────────────────
 
-async function runTestsOnBrowser(hubUrl, browserName) {
+async function runTestsOnBrowser(hubUrl, browserName, testUser) {
   log(`\n── ${browserName.toUpperCase()} ──`);
 
   let driver;
@@ -174,20 +331,21 @@ async function runTestsOnBrowser(hubUrl, browserName) {
       .forBrowser(browserName)
       .build();
 
-    // Set reasonable timeouts
     await driver.manage().setTimeouts({ implicit: 5000, pageLoad: 30000 });
-    // Set desktop viewport
     await driver.manage().window().setRect({ width: 1280, height: 800 });
   } catch (err) {
+    const totalTests = PUBLIC_TESTS.length + (testUser ? AUTH_TESTS.length : 0);
     fail(`Failed to create ${browserName} session: ${err.message}`);
-    return { browser: browserName, passed: 0, failed: TESTS.length, results: [] };
+    return { browser: browserName, passed: 0, failed: totalTests, results: [] };
   }
 
   let passed = 0;
   let failed = 0;
   const results = [];
 
-  for (const test of TESTS) {
+  // Run public tests
+  log('  Public tests:');
+  for (const test of PUBLIC_TESTS) {
     try {
       await test.run(driver);
       pass(test.name);
@@ -197,6 +355,23 @@ async function runTestsOnBrowser(hubUrl, browserName) {
       fail(`${test.name} — ${err.message}`);
       failed++;
       results.push({ name: test.name, passed: false, error: err.message });
+    }
+  }
+
+  // Run authenticated tests
+  if (testUser) {
+    log('  Authenticated tests:');
+    for (const test of AUTH_TESTS) {
+      try {
+        await test.run(driver, testUser);
+        pass(test.name);
+        passed++;
+        results.push({ name: test.name, passed: true });
+      } catch (err) {
+        fail(`${test.name} — ${err.message}`);
+        failed++;
+        results.push({ name: test.name, passed: false, error: err.message });
+      }
     }
   }
 
@@ -235,11 +410,15 @@ if (args.includes('--help') || args.includes('help')) {
 AWS Device Farm Desktop Browser Testing for xAI Workspace
 
 Usage:
-  node scripts/device-farm-browser.mjs                          Run on all browsers
+  node scripts/device-farm-browser.mjs                          Run public tests on all browsers
+  node scripts/device-farm-browser.mjs --auth                   Include authenticated tests
   node scripts/device-farm-browser.mjs --browser chrome         Chrome only
   node scripts/device-farm-browser.mjs --browser firefox        Firefox only
   node scripts/device-farm-browser.mjs --url http://localhost:4200  Test local URL
   node scripts/device-farm-browser.mjs --list-sessions          List recent sessions
+
+Environment:
+  DEVICEFARM_TEST_SECRET    Shared secret for backend test auth endpoint (required for --auth)
 
 Config:
   Test Grid:  ${TEST_GRID_ARN}
@@ -247,7 +426,10 @@ Config:
   Region:     ${AWS_REGION}
   Target URL: ${TEST_URL}
   Browsers:   ${BROWSERS.join(', ')}
-  Tests:      ${TESTS.length} smoke tests
+
+Backend endpoint for --auth:
+  GET ${ROUTER_URL}/auth/test/token?secret=<DEVICEFARM_TEST_SECRET>
+  Returns: { "provider": "google", "code": "...", "email": "...", "name": "..." }
 `);
   process.exit(0);
 }
@@ -257,17 +439,40 @@ if (args.includes('--list-sessions')) {
   process.exit(0);
 }
 
+// Fetch test user token if --auth is requested
+let testUser = null;
+if (RUN_AUTH) {
+  if (!TEST_SECRET) {
+    console.error('\n[ERROR] --auth requires DEVICEFARM_TEST_SECRET environment variable.\n');
+    console.error('Set it with: export DEVICEFARM_TEST_SECRET=<your_secret>\n');
+    console.error('The backend needs a GET /auth/test/token endpoint. See --help for details.\n');
+    process.exit(1);
+  }
+  testUser = await fetchTestToken();
+  if (!testUser) {
+    console.error('\n[ERROR] Failed to fetch test auth token. Check the backend endpoint.\n');
+    process.exit(1);
+  }
+}
+
+const publicCount = PUBLIC_TESTS.length;
+const authCount = testUser ? AUTH_TESTS.length : 0;
+const totalTests = publicCount + authCount;
+
 log('AWS Device Farm Desktop Browser Testing');
 log(`Target: ${TEST_URL}`);
 log(`Browsers: ${BROWSERS.join(', ')}`);
-log(`Tests: ${TESTS.length} smoke tests`);
+log(`Tests: ${publicCount} public + ${authCount} authenticated = ${totalTests} total`);
+if (testUser) {
+  log(`Auth: ${testUser.provider} (${testUser.email || testUser.name || 'test user'})`);
+}
 
 const hubUrl = getTestGridUrl();
 log('Test grid URL obtained (expires in 15 min)');
 
 const allResults = [];
 for (const browser of BROWSERS) {
-  const result = await runTestsOnBrowser(hubUrl, browser);
+  const result = await runTestsOnBrowser(hubUrl, browser, testUser);
   allResults.push(result);
 }
 
