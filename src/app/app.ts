@@ -76,8 +76,7 @@ import { ToastComponent } from './components/toast/toast';
     :host(.has-chat) {
       @media (min-width: 861px) {
         max-width: none;
-        display: flex;
-        justify-content: center;
+        overflow: hidden;
       }
     }
 
@@ -85,19 +84,28 @@ import { ToastComponent } from './components/toast/toast';
       animation: fadeIn 0.2s ease;
     }
 
+    /* --- Desktop: all panels position:fixed, chat pinned to center --- */
+
     .content-frame {
-      flex: 0 0 430px;
-      max-width: 430px;
       min-height: 100vh;
       width: 100%;
       position: relative;
       overflow: hidden;
-      transition: margin-left 1.5s ease;
+
+      @media (min-width: 861px) {
+        position: fixed;
+        top: 0;
+        right: calc(50% + 450px);
+        width: 430px;
+        height: 100vh;
+        min-height: auto;
+        transition: transform 1.5s ease;
+      }
     }
 
     .content-frame--collapsed {
       @media (min-width: 861px) {
-        margin-left: -430px;
+        transform: translateX(-100%);
       }
     }
 
@@ -106,10 +114,13 @@ import { ToastComponent } from './components/toast/toast';
 
       @media (min-width: 861px) {
         display: flex;
-        flex: 0 0 auto;
+        position: fixed;
+        top: 0;
+        right: calc(50% + 430px);
+        width: 20px;
+        height: 100vh;
         align-items: center;
         justify-content: center;
-        width: 20px;
         background: var(--tg-theme-secondary-bg-color);
         border: none;
         border-left: 1px solid rgba(128, 128, 128, 0.15);
@@ -118,6 +129,7 @@ import { ToastComponent } from './components/toast/toast';
         padding: 0;
         color: var(--tg-theme-hint-color);
         transition: background 0.15s, color 0.15s;
+        z-index: 2;
 
         &:hover {
           background: var(--tg-theme-button-color);
@@ -147,15 +159,48 @@ import { ToastComponent } from './components/toast/toast';
       line-height: 1;
     }
 
+    .chat-frame {
+      @media (min-width: 861px) {
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 860px;
+        height: 100vh;
+        z-index: 1;
+      }
+
+      @media (max-width: 860px) {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        height: 65vh;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        z-index: 100;
+
+        &--open {
+          transform: translateY(0);
+        }
+      }
+    }
+
     .agents-toggle {
       display: none;
 
       @media (min-width: 861px) {
         display: flex;
-        flex: 0 0 auto;
+        position: fixed;
+        top: 0;
+        left: calc(50% + 430px);
+        width: 20px;
+        height: 100vh;
         align-items: center;
         justify-content: center;
-        width: 20px;
         background: var(--tg-theme-secondary-bg-color);
         border: none;
         border-left: 1px solid rgba(128, 128, 128, 0.15);
@@ -164,6 +209,7 @@ import { ToastComponent } from './components/toast/toast';
         padding: 0;
         color: var(--tg-theme-hint-color);
         transition: background 0.15s, color 0.15s;
+        z-index: 2;
 
         &:hover {
           background: var(--tg-theme-button-color);
@@ -190,44 +236,21 @@ import { ToastComponent } from './components/toast/toast';
       50% { background: var(--brand-primary); color: #fff; }
     }
 
-    .chat-frame {
-      flex: 0 0 430px;
-      min-width: 0;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-
-      @media (max-width: 860px) {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: auto;
-        height: 65vh;
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
-        transform: translateY(100%);
-        transition: transform 0.3s ease;
-        z-index: 100;
-
-        &--open {
-          transform: translateY(0);
-        }
-      }
-    }
-
     .agents-frame {
-      flex: 0 0 0px;
-      min-width: 0;
-      overflow: hidden;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      transition: flex-basis 0.3s ease;
+      @media (min-width: 861px) {
+        position: fixed;
+        top: 0;
+        left: calc(50% + 450px);
+        width: 350px;
+        height: 100vh;
+        overflow: hidden;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+      }
 
       &--open {
         @media (min-width: 861px) {
-          flex: 0 0 350px;
+          transform: translateX(0);
         }
       }
 
@@ -243,7 +266,6 @@ import { ToastComponent } from './components/toast/toast';
         transform: translateY(100%);
         transition: transform 0.3s ease;
         z-index: 100;
-        flex: none;
         overflow: visible;
 
         &--open {

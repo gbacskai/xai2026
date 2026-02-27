@@ -359,6 +359,12 @@ export class ChatService {
       return;
     }
 
+    // Intercept /restart — call router API directly (not via openclaw)
+    if (trimmed === '/restart') {
+      this.handleRestart();
+      return;
+    }
+
     if (isConnected) {
       this.ws!.send(JSON.stringify({ type: 'message', text: trimmed }));
       this.botTyping.set(true);
@@ -422,6 +428,52 @@ export class ChatService {
       sender: 'bot',
       timestamp: Date.now(),
     });
+  }
+
+  private async handleRestart(): Promise<void> {
+    const token = this.sessionToken;
+    if (!token) {
+      this.addMessage({
+        id: crypto.randomUUID(),
+        text: 'Not authenticated. Please log in first.',
+        sender: 'system',
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    this.addMessage({
+      id: crypto.randomUUID(),
+      text: 'Restarting instance...',
+      sender: 'system',
+      timestamp: Date.now(),
+    });
+
+    try {
+      const res = await fetch(`${environment.routerUrl}/api/restart`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(body || `HTTP ${res.status}`);
+      }
+
+      this.addMessage({
+        id: crypto.randomUUID(),
+        text: 'Instance restart initiated. It may take a minute to come back online.',
+        sender: 'bot',
+        timestamp: Date.now(),
+      });
+    } catch (err: any) {
+      this.addMessage({
+        id: crypto.randomUUID(),
+        text: `Restart failed: ${err.message || 'Unknown error'}`,
+        sender: 'system',
+        timestamp: Date.now(),
+      });
+    }
   }
 
   disconnect(): void {

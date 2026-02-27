@@ -17,6 +17,7 @@ const COMMANDS: { command: string; description: string }[] = [
   { command: '/privacy',    description: 'Privacy policy and data management' },
   { command: '/authorize',  description: 'Connect third-party services' },
   { command: '/ssh',        description: 'Download SSH key' },
+  { command: '/restart',     description: 'Restart your instance' },
   { command: '/status_x',   description: 'Check instance status' },
   { command: '/diagnostic', description: 'Run full stack health check' },
   { command: '/invite',     description: 'Invite someone and earn free tokens' },
