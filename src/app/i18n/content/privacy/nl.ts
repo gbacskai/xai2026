@@ -1,7 +1,7 @@
 export const PRIVACY_NL = `
 ## Wie wij zijn
 
-xShopper Pty Ltd ("xShopper", "wij", "ons") exploiteert de OpenClaw AI-dienst, toegankelijk via xAI Workspace.
+xShopper Pty Ltd ("xShopper", "wij", "ons") exploiteert de xAI Workspace-dienst, toegankelijk via xAI Workspace.
 Verwerkingsverantwoordelijke: xShopper Pty Ltd, Australië.
 Contact: privacy@xshopper.com
 
@@ -9,7 +9,7 @@ Contact: privacy@xshopper.com
 
 ## Welke persoonsgegevens wij verzamelen
 
-Wanneer je OpenClaw AI gebruikt, verzamelen wij:
+Wanneer je xAI Workspace gebruikt, verzamelen wij:
 
 - **xAI Workspace-gebruikersidentificatie** (chat_id) — je unieke xAI Workspace-ID, gebruikt om je account te identificeren in de gehele dienst
 - **E-mailadres** — als je je registreert of wordt uitgenodigd, slaan wij je e-mail op om je account te beheren en servicecommunicatie te verzenden
@@ -22,14 +22,14 @@ Wanneer je OpenClaw AI gebruikt, verzamelen wij:
 
 ## Waarom wij je gegevens verwerken en de rechtsgrondslag
 
-| Doel | Rechtsgrondslag (AVG Art. 6) |
+| Doel | Rechtsgrondslag |
 |---|---|
-| Het leveren van de AI-agentdienst (accountinrichting, berichten routeren, je abonnement beheren) | Art. 6(1)(b) — uitvoering van een overeenkomst |
-| Facturering en betalingsverwerking | Art. 6(1)(b) — uitvoering van een overeenkomst |
-| Verbruiksmonitoring en budgethandhaving | Art. 6(1)(b) — uitvoering van een overeenkomst |
-| Verzenden van servicemeldingen (verbruikswaarschuwingen, verlengingsherinneringen) | Art. 6(1)(b) — uitvoering van een overeenkomst |
-| Verzenden van uitnodigings-e-mails namens jou | Art. 6(1)(a) — toestemming (jij initieert het /invite-commando) |
-| Beveiligingsmonitoring en misbruikpreventie | Art. 6(1)(f) — gerechtvaardigde belangen |
+| Het leveren van de AI-agentdienst (accountinrichting, berichten routeren, je abonnement beheren) | AVG Art. 6(1)(b) — uitvoering van een overeenkomst; APP 3 — redelijkerwijs noodzakelijk voor de dienst |
+| Facturering en betalingsverwerking | AVG Art. 6(1)(b) — uitvoering van een overeenkomst; APP 3 — redelijkerwijs noodzakelijk |
+| Verbruiksmonitoring en budgethandhaving | AVG Art. 6(1)(b) — uitvoering van een overeenkomst; APP 3 — redelijkerwijs noodzakelijk |
+| Verzenden van servicemeldingen (verbruikswaarschuwingen, verlengingsherinneringen) | AVG Art. 6(1)(b) — uitvoering van een overeenkomst |
+| Verzenden van uitnodigings-e-mails namens jou | AVG Art. 6(1)(a) — toestemming (jij initieert het /invite-commando) |
+| Beveiligingsmonitoring en misbruikpreventie | AVG Art. 6(1)(f) — gerechtvaardigde belangen |
 
 ---
 
@@ -37,20 +37,37 @@ Wanneer je OpenClaw AI gebruikt, verzamelen wij:
 
 Wij gebruiken de volgende externe verwerkers om de dienst te leveren:
 
-- **Telegram** (Nederland) — bezorgt berichten tussen jou en je AI-agent
-- **Anthropic** (Verenigde Staten) — verwerkt je gespreksinhoud om AI-antwoorden te genereren. Overdrachtsmechanisme: Standaard Contractbepalingen
-- **Stripe** (Verenigde Staten) — verwerkt alle betalingen. Overdrachtsmechanisme: Standaard Contractbepalingen / EU-VS Gegevensprivacykader
-- **Neon** (Verenigde Staten) — host onze database. Overdrachtsmechanisme: Standaard Contractbepalingen
-- **Amazon Web Services** (Australië, ap-southeast-2) — host alle infrastructuur
-- **Cloudflare** (Wereldwijd) — levert DNS-diensten
+- **Telegram** (Nederland / VAE) — bezorgt berichten tussen jou en je AI-agent
+- **Anthropic** (Verenigde Staten) — primaire AI-modelprovider; verwerkt je gespreksinhoud om AI-antwoorden te genereren
+- **OpenAI** (Verenigde Staten) — optionele AI-modelprovider; verwerkt gespreksinhoud als je een OpenAI-model selecteert
+- **Google / Gemini** (Verenigde Staten) — optionele AI-modelprovider; verwerkt gespreksinhoud als je een Gemini-model selecteert
+- **Groq** (Verenigde Staten) — optionele AI-modelprovider; verwerkt gespreksinhoud als je een Groq-model selecteert
+- **DeepSeek** (China / Singapore) — optionele AI-modelprovider; verwerkt gespreksinhoud als je een DeepSeek-model selecteert
+- **Mistral AI** (Frankrijk) — optionele AI-modelprovider; verwerkt gespreksinhoud als je een Mistral-model selecteert
+- **Alibaba Cloud / Qwen** (China / Singapore) — optionele AI-modelprovider; verwerkt gespreksinhoud als je een Qwen-model selecteert
+- **Stripe** (Verenigde Staten) — verwerkt alle betalingen
+- **Neon** (Verenigde Staten) — host onze database
+- **Amazon Web Services** (Australië en Verenigde Staten) — host infrastructuur in Sydney (ap-southeast-2) en N. Virginia (us-east-1)
 
 Wij verkopen je persoonsgegevens niet.
 
 ---
 
-## Internationale overdrachten
+## Internationale overdrachten en openbaarmaking in het buitenland
 
-Je AI-gespreksinhoud wordt verwerkt door Anthropic in de Verenigde Staten. Deze overdracht wordt gedekt door Standaard Contractbepalingen. Betalingsgegevens worden verwerkt door Stripe in de Verenigde Staten, gedekt door het EU-VS Gegevensprivacykader en Standaard Contractbepalingen.
+xShopper Pty Ltd is een Australisch bedrijf. Je persoonsgegevens worden overgedragen aan en verwerkt in de volgende landen:
+
+| Land | Ontvangers | Overgedragen gegevens |
+|---|---|---|
+| **Australië** | AWS (Sydney, ap-southeast-2) | Alle gegevens — primaire hostingregio |
+| **Verenigde Staten** | Anthropic, OpenAI, Groq, Google, AWS (us-east-1), Neon, Stripe | AI-gesprekken, accountgegevens, betalingsgegevens |
+| **Frankrijk** | Mistral AI | AI-gesprekken (als Mistral-model geselecteerd) |
+| **China / Singapore** | DeepSeek, Alibaba Cloud (Qwen) | AI-gesprekken (als DeepSeek- of Qwen-model geselecteerd) |
+| **Nederland / VAE** | Telegram | Berichten, gebruikersidentificatoren |
+
+**Voor Australische gebruikers (Privacy Act 1988):** Op grond van Australian Privacy Principle 8 neemt xShopper redelijke stappen om te waarborgen dat ontvangers in het buitenland je persoonlijke informatie behandelen in overeenstemming met de APPs. Door gebruik te maken van deze dienst en bij aanmelding in te stemmen, erken je dat je gegevens worden overgedragen aan de hierboven genoemde landen en dat de Australische privacybeginselen mogelijk niet van toepassing zijn op gegevens die worden bewaard door ontvangers in het buitenland. Je kunt een klacht indienen bij het Office of the Australian Information Commissioner (OAIC) als je van mening bent dat je informatie onjuist is behandeld.
+
+**Voor EU/EER-gebruikers (AVG):** Overdrachten naar de Verenigde Staten worden gedekt door Standaard Contractbepalingen en, waar beschikbaar, het EU-VS Gegevensprivacykader. Overdrachten naar Frankrijk (Mistral AI) vereisen geen aanvullende waarborgen (EU-lidstaat).
 
 ---
 
@@ -60,12 +77,24 @@ Je AI-gespreksinhoud wordt verwerkt door Anthropic in de Verenigde Staten. Deze 
 - Betalingsrecords: bewaard gedurende 7 jaar zoals vereist door de Australische belastingwetgeving
 - AI-gespreksinhoud: opgeslagen op je dedicated serverinstantie; verwijderd wanneer je instantie wordt beëindigd
 - Gebruikslogs: bewaard gedurende 90 dagen
+- API-gebruiksrecords: bewaard gedurende 90 dagen
 
 ---
 
 ## Je rechten
 
-Als je je in de EU/EER of het VK bevindt, heb je de volgende rechten onder de AVG:
+### Australische gebruikers (Privacy Act 1988)
+
+Op grond van de Australian Privacy Principles heb je het recht om:
+
+- **Toegang** te krijgen tot je persoonlijke informatie (APP 12)
+- **Onjuiste of verouderde informatie te corrigeren** (APP 13)
+- **Verwijdering** van je persoonlijke informatie te verzoeken
+- Een **klacht in te dienen** bij het Office of the Australian Information Commissioner (OAIC) — [oaic.gov.au](https://www.oaic.gov.au)
+
+### EU/EER- en VK-gebruikers (AVG)
+
+Je hebt de volgende rechten onder de AVG:
 
 - **Recht op inzage** — vraag een kopie van je persoonsgegevens op
 - **Recht op rectificatie** — vraag correctie van onjuiste gegevens
@@ -74,14 +103,24 @@ Als je je in de EU/EER of het VK bevindt, heb je de volgende rechten onder de AV
 - **Recht op gegevensoverdraagbaarheid** — ontvang je gegevens in een gestructureerd, machineleesbaar formaat
 - **Recht van bezwaar** — maak bezwaar tegen verwerking op basis van gerechtvaardigde belangen
 
+Je hebt ook het recht om een klacht in te dienen bij je lokale toezichthoudende autoriteit.
+
+### Hoe je je rechten uitoefent
+
 Je kunt meerdere van deze rechten rechtstreeks in xAI Workspace uitoefenen:
 
 - Stuur \`/my_data\` om je persoonsgegevens te exporteren
 - Stuur \`/delete_my_data\` om verwijdering van al je gegevens aan te vragen
+- Stuur \`/email\` om je e-mailadres bij te werken
 
 Voor overige verzoeken kun je contact met ons opnemen via privacy@xshopper.com. Wij reageren binnen 30 dagen.
 
-Je hebt ook het recht om een klacht in te dienen bij je lokale toezichthoudende autoriteit.
+---
+
+## Klachten
+
+- **Australië:** Office of the Australian Information Commissioner (OAIC), [oaic.gov.au](https://www.oaic.gov.au), Telefoon: 1300 363 992
+- **EU/EER:** Jouw lokale toezichthoudende autoriteit
 
 ---
 
@@ -90,4 +129,6 @@ Je hebt ook het recht om een klacht in te dienen bij je lokale toezichthoudende 
 Privacyvragen: privacy@xshopper.com
 xShopper Pty Ltd, Australië
 Australian Trademark No. 1749660 (Class 35)
+
+*Versie privacybeleid: 2026-02-27*
 `;
