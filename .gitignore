@@ -44,6 +44,11 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+# Capacitor native build artifacts
+/ios/App/Pods/
+/android/.gradle/
+/android/app/build/
+
 # System files
 .DS_Store
 Thumbs.db

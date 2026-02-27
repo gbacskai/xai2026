@@ -5,9 +5,17 @@ import { I18nService } from './i18n/i18n.service';
 import { AuthService } from './services/auth.service';
 import { ChatService } from './services/chat.service';
 import { AgentsService } from './services/agents.service';
+import { PlatformService } from './services/platform.service';
+import { PushNotificationService } from './services/push-notification.service';
+import { BiometricService } from './services/biometric.service';
+import { DeepLinkService } from './services/deep-link.service';
 import { ChatPanelComponent } from './components/chat-panel/chat-panel';
 import { AgentsPanelComponent } from './components/agents-panel/agents-panel';
 import { ToastComponent } from './components/toast/toast';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { App as CapApp } from '@capacitor/app';
+import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
   selector: 'app-root',
@@ -367,6 +375,10 @@ export class App implements OnInit, OnDestroy {
   private tg = inject(TelegramService);
   private i18n = inject(I18nService);
   private auth = inject(AuthService);
+  private platform = inject(PlatformService);
+  private pushNotification = inject(PushNotificationService);
+  private biometric = inject(BiometricService);
+  private deepLink = inject(DeepLinkService);
   chat = inject(ChatService);
   agents = inject(AgentsService);
 
@@ -404,6 +416,47 @@ export class App implements OnInit, OnDestroy {
   ngOnInit() {
     this.tg.init();
     this.i18n.detect();
+
+    if (this.platform.isNative) {
+      this.initNative();
+    }
+  }
+
+  private async initNative(): Promise<void> {
+    // Status bar
+    StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+    if (this.platform.isAndroid) {
+      StatusBar.setBackgroundColor({ color: '#2D7AB8' }).catch(() => {});
+    }
+
+    // Hide splash screen after init
+    SplashScreen.hide().catch(() => {});
+
+    // Deep links
+    this.deepLink.initialize();
+
+    // Biometric
+    await this.biometric.initialize();
+
+    // Push notifications (delayed to allow auth to settle)
+    setTimeout(() => this.pushNotification.initialize(), 3000);
+
+    // Biometric lock on app resume
+    CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive && this.biometric.isEnabled()) {
+        this.biometric.verifyIdentity();
+      }
+    });
+
+    // Keyboard handling for iOS
+    if (this.platform.isIOS) {
+      Keyboard.addListener('keyboardWillShow', (info) => {
+        document.documentElement.style.setProperty('--keyboard-height', info.keyboardHeight + 'px');
+      });
+      Keyboard.addListener('keyboardWillHide', () => {
+        document.documentElement.style.setProperty('--keyboard-height', '0px');
+      });
+    }
   }
 
   ngOnDestroy() {

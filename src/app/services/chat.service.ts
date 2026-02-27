@@ -2,6 +2,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import { TelegramService } from './telegram.service';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
+import { StorageService } from './storage.service';
+import { PlatformService } from './platform.service';
 import { environment } from '../../environments/environment';
 
 export interface InlineButton {
@@ -33,6 +35,8 @@ export class ChatService {
   private tg = inject(TelegramService);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private storageService = inject(StorageService);
+  private platformSvc = inject(PlatformService);
 
   private ws: WebSocket | null = null;
   private _pendingCallbackSource: { messageId: string; originalText: string; originalButtons: InlineButton[][] } | null = null;
@@ -66,9 +70,17 @@ export class ChatService {
   }
 
   constructor() {
-    const stored = localStorage.getItem('chat_sessions');
-    if (stored) {
-      try { this.sessions.set(JSON.parse(stored)); } catch { /* ignore */ }
+    if (this.platformSvc.isNative) {
+      this.storageService.get('chat_sessions').then(stored => {
+        if (stored) {
+          try { this.sessions.set(JSON.parse(stored)); } catch { /* ignore */ }
+        }
+      });
+    } else {
+      const stored = localStorage.getItem('chat_sessions');
+      if (stored) {
+        try { this.sessions.set(JSON.parse(stored)); } catch { /* ignore */ }
+      }
     }
   }
 
@@ -152,7 +164,7 @@ export class ChatService {
                 return updated;
               });
             }
-            localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+            this.storageService.set('chat_sessions', JSON.stringify(this.sessions()));
           }
           return;
         }
@@ -174,14 +186,14 @@ export class ChatService {
           this.sessions.update(list =>
             list.map(s => s.chatId === this.currentChatId() ? { ...s, sessionToken: msg.sessionToken } : s)
           );
-          localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          this.storageService.set('chat_sessions', JSON.stringify(this.sessions()));
           return;
         }
 
         // Handle expired session — remove stale session and close
         if (msg.type === 'auth_required' && msg.reason === 'session_expired') {
           this.sessions.update(list => list.filter(s => s.sessionToken !== this.sessionToken));
-          localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          this.storageService.set('chat_sessions', JSON.stringify(this.sessions()));
           this.sessionToken = null;
           this.connectionState.set('error');
           this.addMessage({
@@ -230,7 +242,7 @@ export class ChatService {
             const filtered = list.filter(s => s.chatId !== msg.chatId);
             return [...filtered, { chatId: msg.chatId, sessionToken: msg.sessionToken, provider: '' }];
           });
-          localStorage.setItem('chat_sessions', JSON.stringify(this.sessions()));
+          this.storageService.set('chat_sessions', JSON.stringify(this.sessions()));
           this.addMessage({
             id: crypto.randomUUID(),
             text: 'Another account found — use the account switcher to access it.',

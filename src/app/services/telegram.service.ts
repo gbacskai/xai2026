@@ -1,4 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 @Injectable({ providedIn: 'root' })
 export class TelegramService {
@@ -48,8 +50,13 @@ export class TelegramService {
   }
 
   haptic(type: 'light' | 'medium' | 'heavy' = 'light') {
-    if (!this.isTelegram) return;
-    this.webapp!.HapticFeedback.impactOccurred(type);
+    if (this.isTelegram) {
+      this.webapp!.HapticFeedback.impactOccurred(type);
+    } else if (Capacitor.isNativePlatform()) {
+      const style =
+        type === 'heavy' ? ImpactStyle.Heavy : type === 'medium' ? ImpactStyle.Medium : ImpactStyle.Light;
+      Haptics.impact({ style });
+    }
   }
 
   showAlert(message: string, callback?: () => void) {
