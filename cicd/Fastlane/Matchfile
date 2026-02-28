@@ -1,0 +1,12 @@
+# Fastlane Match — S3 storage for code signing certificates
+# Used by CodeBuild macOS builds for iOS signing
+
+storage_mode("s3")
+s3_bucket("openclaw-sme-fastlane-match")
+s3_region("ap-southeast-2")
+
+type("appstore")
+app_identifier("com.xshopper.xaiworkspace")
+team_id(ENV["APPLE_TEAM_ID"] || "xShopper Pty Ltd")
+
+# MATCH_PASSWORD env var is required (set from Secrets Manager in buildspec)

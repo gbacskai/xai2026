@@ -1,0 +1,32 @@
+version: 0.2
+
+# iOS App Store submission: Fastlane deliver → submit latest TestFlight build for review
+# Runs on CodeBuild macOS ARM64 environment
+
+env:
+  secrets-manager:
+    APP_STORE_CONNECT_API_KEY_ID: "openclaw-sme/appstore-connect:APP_STORE_CONNECT_API_KEY_ID"
+    APP_STORE_CONNECT_ISSUER_ID: "openclaw-sme/appstore-connect:APP_STORE_CONNECT_ISSUER_ID"
+    APP_STORE_CONNECT_KEY_BASE64: "openclaw-sme/appstore-connect:APP_STORE_CONNECT_KEY_BASE64"
+
+phases:
+  install:
+    commands:
+      - gem install fastlane --no-document
+      # Decode App Store Connect API key
+      - mkdir -p ~/.appstoreconnect/private_keys
+      - echo "${APP_STORE_CONNECT_KEY_BASE64}" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+
+  build:
+    commands:
+      - echo "Submitting to App Store review via Fastlane..."
+      - |
+        export APP_STORE_CONNECT_API_KEY_KEY_ID="${APP_STORE_CONNECT_API_KEY_ID}"
+        export APP_STORE_CONNECT_API_KEY_ISSUER_ID="${APP_STORE_CONNECT_ISSUER_ID}"
+        export APP_STORE_CONNECT_API_KEY_KEY_FILEPATH="${HOME}/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+        fastlane ios release
+
+  post_build:
+    commands:
+      - echo "App Store submission complete"
+      - rm -rf ~/.appstoreconnect

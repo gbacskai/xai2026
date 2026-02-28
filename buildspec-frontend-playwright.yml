@@ -1,0 +1,43 @@
+version: 0.2
+
+# Playwright E2E tests: chromium, firefox, mobile-chrome
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm ci
+      - npx playwright install --with-deps chromium firefox
+
+  build:
+    commands:
+      - echo "Building production app for E2E..."
+      - npx ng build --configuration production
+      - echo "Starting static server..."
+      - npx serve dist/xaiworkspace/browser -l 4200 &
+      - sleep 5
+      - echo "Running Playwright E2E tests..."
+      - CI=true npx playwright test --reporter=html,junit
+
+  post_build:
+    commands:
+      - echo "E2E tests complete"
+
+reports:
+  playwright-results:
+    files:
+      - test-results/results.xml
+    file-format: JUNITXML
+    base-directory: .
+
+artifacts:
+  files:
+    - playwright-report/**/*
+  base-directory: .
+  discard-paths: no
+
+cache:
+  paths:
+    - node_modules/**/*
+    - ~/.cache/ms-playwright/**/*

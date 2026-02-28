@@ -1,0 +1,66 @@
+# Fastlane configuration for CI/CD iOS builds
+# This supplements the existing fastlane/Fastfile with CI-specific lanes
+
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    # Use App Store Connect API key (set via env vars in buildspec)
+    if ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"]
+      app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+        key_filepath: ENV["APP_STORE_CONNECT_API_KEY_KEY_FILEPATH"],
+        in_house: false
+      )
+    end
+  end
+
+  desc "Fetch signing certificates from S3 (read-only for CI)"
+  lane :match_ci do
+    match(
+      type: "appstore",
+      storage_mode: "s3",
+      s3_bucket: "openclaw-sme-fastlane-match",
+      s3_region: "ap-southeast-2",
+      readonly: true,
+      app_identifier: "com.xshopper.xaiworkspace"
+    )
+  end
+
+  desc "Build and upload to TestFlight (CI)"
+  lane :ci_upload do
+    match_ci
+
+    build_app(
+      project: "ios/App/App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "ios/App/build",
+      output_name: "xAIWorkspace.ipa",
+      clean: true
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      ipa: "ios/App/build/xAIWorkspace.ipa"
+    )
+  end
+
+  desc "Submit latest TestFlight build for App Store review (CI)"
+  lane :ci_release do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      submit_for_review: true,
+      automatic_release: true,
+      metadata_path: "fastlane/metadata/ios",
+      force: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false
+      }
+    )
+  end
+end

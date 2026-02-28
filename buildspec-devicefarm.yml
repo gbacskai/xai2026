@@ -1,0 +1,22 @@
+version: 0.2
+
+# Device Farm: upload Android APK and run fuzz + browser smoke tests
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm ci
+
+  build:
+    commands:
+      - echo "Running Device Farm fuzz test on Android..."
+      - node scripts/device-farm-test.mjs --skip-build
+
+      - echo "Running Device Farm browser smoke tests..."
+      - node scripts/device-farm-browser.mjs
+
+  post_build:
+    commands:
+      - echo "Device Farm tests complete"

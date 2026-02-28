@@ -1,0 +1,27 @@
+version: 0.2
+
+# Google Play upload: AAB → Google Play internal track via service account
+
+env:
+  secrets-manager:
+    SERVICE_ACCOUNT_JSON: "openclaw-sme/google-play:SERVICE_ACCOUNT_JSON"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm ci
+      # Write service account JSON for Google Play API auth
+      - mkdir -p ~/.config/xaiworkspace
+      - echo "${SERVICE_ACCOUNT_JSON}" > ~/.config/xaiworkspace/xaiworkspace-c7e88e486380.json
+
+  build:
+    commands:
+      - echo "Uploading AAB to Google Play internal track..."
+      - node scripts/google-play-publish.mjs upload internal
+
+  post_build:
+    commands:
+      - echo "Google Play upload complete"
+      - rm -f ~/.config/xaiworkspace/xaiworkspace-c7e88e486380.json

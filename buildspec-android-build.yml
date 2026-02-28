@@ -1,0 +1,81 @@
+version: 0.2
+
+# Android build: Angular production build → Capacitor sync → Gradle bundleRelease (AAB + APK)
+
+env:
+  secrets-manager:
+    KEYSTORE_BASE64: "openclaw-sme/android-signing:KEYSTORE_BASE64"
+    KEYSTORE_PASSWORD: "openclaw-sme/android-signing:KEYSTORE_PASSWORD"
+    KEY_ALIAS: "openclaw-sme/android-signing:KEY_ALIAS"
+    KEY_PASSWORD: "openclaw-sme/android-signing:KEY_PASSWORD"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+      java: corretto21
+    commands:
+      - npm ci
+      # Install Android SDK command-line tools
+      - |
+        if [ ! -d "${ANDROID_HOME:-/opt/android-sdk}" ]; then
+          export ANDROID_HOME=/opt/android-sdk
+          mkdir -p "${ANDROID_HOME}/cmdline-tools"
+          cd /tmp
+          curl -sO https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-*.zip -d "${ANDROID_HOME}/cmdline-tools"
+          mv "${ANDROID_HOME}/cmdline-tools/cmdline-tools" "${ANDROID_HOME}/cmdline-tools/latest"
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+        fi
+      - export ANDROID_HOME="${ANDROID_HOME:-/opt/android-sdk}"
+      - export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+
+  pre_build:
+    commands:
+      # Decode signing keystore from Secrets Manager
+      - echo "${KEYSTORE_BASE64}" | base64 -d > android/app/release.keystore
+      - |
+        cat > android/keystore.properties <<EOF
+        storeFile=release.keystore
+        storePassword=${KEYSTORE_PASSWORD}
+        keyAlias=${KEY_ALIAS}
+        keyPassword=${KEY_PASSWORD}
+        EOF
+
+  build:
+    commands:
+      - echo "Building Angular production app..."
+      - npx ng build --configuration production
+
+      - echo "Syncing to Android via Capacitor..."
+      - npx cap sync android
+
+      - echo "Building Android App Bundle (AAB)..."
+      - cd android && ./gradlew bundleRelease --no-daemon
+      - cd ..
+
+      - echo "Building debug APK for Device Farm..."
+      - cd android && ./gradlew assembleDebug --no-daemon
+      - cd ..
+
+      - echo "Build artifacts:"
+      - ls -lh android/app/build/outputs/bundle/release/ || true
+      - ls -lh android/app/build/outputs/apk/debug/ || true
+
+  post_build:
+    commands:
+      # Clean up signing material
+      - rm -f android/app/release.keystore android/keystore.properties
+
+artifacts:
+  files:
+    - android/app/build/outputs/bundle/release/app-release.aab
+    - android/app/build/outputs/apk/debug/app-debug.apk
+  discard-paths: no
+
+cache:
+  paths:
+    - node_modules/**/*
+    - android/.gradle/**/*
+    - ~/.gradle/**/*

@@ -31,7 +31,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npx ng serve --port 4200',
+    command: process.env['CI']
+      ? 'npx serve dist/xaiworkspace/browser -l 4200'
+      : 'npx ng serve --port 4200',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000,

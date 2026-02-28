@@ -1,0 +1,69 @@
+version: 0.2
+
+# iOS build: Capacitor sync → xcodebuild archive → Fastlane pilot (TestFlight upload)
+# Runs on CodeBuild macOS ARM64 (Apple Silicon) environment
+
+env:
+  secrets-manager:
+    APP_STORE_CONNECT_API_KEY_ID: "openclaw-sme/appstore-connect:APP_STORE_CONNECT_API_KEY_ID"
+    APP_STORE_CONNECT_ISSUER_ID: "openclaw-sme/appstore-connect:APP_STORE_CONNECT_ISSUER_ID"
+    APP_STORE_CONNECT_KEY_BASE64: "openclaw-sme/appstore-connect:APP_STORE_CONNECT_KEY_BASE64"
+    MATCH_PASSWORD: "openclaw-sme/fastlane-match:MATCH_PASSWORD"
+
+phases:
+  install:
+    commands:
+      # Node.js (via Homebrew, pre-installed on macOS image)
+      - node --version || brew install node@22
+      - npm ci
+
+      # Install Fastlane and CocoaPods
+      - gem install fastlane --no-document
+      - gem install cocoapods --no-document
+
+      # Decode App Store Connect API key for Fastlane auth
+      - mkdir -p ~/.appstoreconnect/private_keys
+      - echo "${APP_STORE_CONNECT_KEY_BASE64}" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+
+  pre_build:
+    commands:
+      - echo "Building Angular production app..."
+      - npx ng build --configuration production
+
+      - echo "Syncing to iOS via Capacitor..."
+      - npx cap sync ios
+
+      # Install CocoaPods dependencies
+      - cd ios/App && pod install && cd ../..
+
+      # Fastlane Match: fetch certificates and profiles from S3
+      - |
+        export MATCH_TYPE="appstore"
+        export MATCH_S3_BUCKET="openclaw-sme-fastlane-match"
+        export MATCH_S3_REGION="ap-southeast-2"
+        fastlane match appstore --readonly
+
+  build:
+    commands:
+      - echo "Building iOS archive via Fastlane..."
+      - |
+        export APP_STORE_CONNECT_API_KEY_KEY_ID="${APP_STORE_CONNECT_API_KEY_ID}"
+        export APP_STORE_CONNECT_API_KEY_ISSUER_ID="${APP_STORE_CONNECT_ISSUER_ID}"
+        export APP_STORE_CONNECT_API_KEY_KEY_FILEPATH="${HOME}/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+        fastlane ios upload
+
+  post_build:
+    commands:
+      - echo "TestFlight upload complete"
+      # Clean up signing material
+      - rm -rf ~/.appstoreconnect
+
+artifacts:
+  files:
+    - ios/App/build/xAIWorkspace.ipa
+  discard-paths: no
+
+cache:
+  paths:
+    - node_modules/**/*
+    - ios/App/Pods/**/*

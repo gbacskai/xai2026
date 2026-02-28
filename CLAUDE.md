@@ -132,6 +132,32 @@ Fastlane lanes: `fastlane ios metadata` (upload listings), `fastlane ios upload`
 
 AWS profile: `aws_amplify_docflow4`, region: `us-west-2`
 
+## CI/CD Pipeline
+
+**Source:** CodeCommit `xaiworkspace-frontend`. GitHub retired as source.
+
+**Web (Amplify):** Auto-build on push to `master` → deploys to xaiworkspace.com. Config: `amplify.yml`.
+
+**Mobile (CodePipeline):** `openclaw-sme-mobile` — triggered on push to `release/*` branches:
+1. **Playwright E2E** — chromium, firefox, mobile-chrome (CodeBuild Linux)
+2. **Android Build** — Angular + Capacitor + Gradle → AAB + debug APK (CodeBuild Linux)
+3. **iOS Build** — xcodebuild + Fastlane → TestFlight upload (CodeBuild macOS ARM)
+4. **Device Farm** — Android fuzz + browser smoke tests
+5. **Manual Approve** — Review TestFlight build + Device Farm results
+6. **Google Play** — AAB → internal track via service account
+7. **App Store** — Fastlane deliver → submission for review
+
+**Setup:**
+```bash
+./cicd/setup-mobile-pipeline.sh     # create pipeline (idempotent)
+```
+
+**Fastlane Match:** Certificates stored encrypted in S3 (`openclaw-sme-fastlane-match`). Config: `cicd/Fastlane/Matchfile`.
+
+**CI files:** `buildspec-*.yml` (6 buildspecs), `cicd/setup-mobile-pipeline.sh`, `cicd/Fastlane/` (Fastfile + Matchfile), `cicd/README.md`.
+
+**Device Farm scripts** (`scripts/device-farm-*.mjs`): Use IAM role in CI (`process.env.CI`), local AWS profile otherwise.
+
 ## GDPR Compliance
 
 All compliance documentation is in `Documents/`:

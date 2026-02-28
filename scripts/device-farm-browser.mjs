@@ -44,7 +44,7 @@ import { Builder, By, until } from 'selenium-webdriver';
 // ── Config ──────────────────────────────────────────────────────────────────
 
 const TEST_GRID_ARN = 'arn:aws:devicefarm:us-west-2:695829630004:testgrid-project:ae6b7a7a-6d02-4313-86a6-f3076f5e64f1';
-const AWS_PROFILE = 'aws_amplify_docflow4';
+const AWS_PROFILE = process.env.CI ? '' : 'aws_amplify_docflow4';
 const AWS_REGION = 'us-west-2';
 const DEFAULT_URL = 'https://xaiworkspace.com';
 const ROUTER_URL = 'https://router.xaiworkspace.com';
@@ -67,7 +67,8 @@ function assert(condition, message) {
 }
 
 function aws(command) {
-  const fullCmd = `aws ${command} --profile ${AWS_PROFILE} --region ${AWS_REGION} --output json`;
+  const profileFlag = AWS_PROFILE ? `--profile ${AWS_PROFILE}` : '';
+  const fullCmd = `aws ${command} ${profileFlag} --region ${AWS_REGION} --output json`;
   const result = execSync(fullCmd, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
   return JSON.parse(result);
 }

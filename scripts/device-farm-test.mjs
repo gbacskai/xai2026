@@ -27,7 +27,7 @@ import { tmpdir } from 'node:os';
 // ── Config ──────────────────────────────────────────────────────────────────
 
 const PROJECT_ARN = 'arn:aws:devicefarm:us-west-2:695829630004:project:34d45d4e-2bd1-4a07-b217-e8796c1b4802';
-const AWS_PROFILE = 'aws_amplify_docflow4';
+const AWS_PROFILE = process.env.CI ? '' : 'aws_amplify_docflow4';
 const AWS_REGION = 'us-west-2';
 const PROJECT_ROOT = resolve(import.meta.dirname, '..');
 const ANDROID_DIR = join(PROJECT_ROOT, 'android');
@@ -43,7 +43,8 @@ function log(msg) { console.log(`[device-farm] ${msg}`); }
 function die(msg) { console.error(`\n[ERROR] ${msg}\n`); process.exit(1); }
 
 function aws(command) {
-  const fullCmd = `aws ${command} --profile ${AWS_PROFILE} --region ${AWS_REGION} --output json`;
+  const profileFlag = AWS_PROFILE ? `--profile ${AWS_PROFILE}` : '';
+  const fullCmd = `aws ${command} ${profileFlag} --region ${AWS_REGION} --output json`;
   try {
     const result = execSync(fullCmd, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
     return JSON.parse(result);
