@@ -1,6 +1,19 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
+import {
+  signIn,
+  signUp,
+  confirmSignUp,
+  resetPassword,
+  confirmResetPassword,
+  signInWithRedirect,
+  signOut,
+  getCurrentUser,
+  fetchAuthSession,
+  resendSignUpCode,
+} from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
 import { environment } from '../../environments/environment';
 import { StorageService } from './storage.service';
 import { PlatformService } from './platform.service';
@@ -15,25 +28,13 @@ export interface TelegramLoginUser {
   hash: string;
 }
 
-export interface GoogleUser {
-  provider: 'google';
-  code: string;
+export interface CognitoUser {
+  provider: 'email' | 'google' | 'linkedin' | 'github' | 'telegram';
+  sub: string;
   email: string;
-  name: string;
-  picture?: string;
+  name?: string;
+  idToken: string;
 }
-
-export interface GitHubUser {
-  provider: 'github';
-  code: string;
-}
-
-export interface LinkedInUser {
-  provider: 'linkedin';
-  code: string;
-}
-
-declare const google: any;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -41,127 +42,277 @@ export class AuthService {
   private platformSvc = inject(PlatformService);
 
   readonly webUser = signal<TelegramLoginUser | null>(null);
-  readonly googleUser = signal<GoogleUser | null>(null);
-  readonly githubUser = signal<GitHubUser | null>(null);
-  readonly linkedinUser = signal<LinkedInUser | null>(null);
+  readonly cognitoUser = signal<CognitoUser | null>(null);
+
+  readonly authState = signal<'idle' | 'loading' | 'signIn' | 'signUp' | 'confirm' | 'forgot' | 'reset'>('signIn');
+  readonly authError = signal<string | null>(null);
+
   /** Incremented whenever an auth attempt fails or is cancelled */
   readonly authFailed = signal(0);
-  readonly isAuthenticated = computed(() => !!this.webUser() || !!this.googleUser() || !!this.githubUser() || !!this.linkedinUser());
-  readonly currentProvider = computed<'telegram' | 'google' | 'github' | 'linkedin' | null>(() => {
-    if (this.linkedinUser()) return 'linkedin';
-    if (this.githubUser()) return 'github';
-    if (this.googleUser()) return 'google';
+  readonly isAuthenticated = computed(() => !!this.cognitoUser() || !!this.webUser());
+  readonly currentProvider = computed<'email' | 'google' | 'linkedin' | 'github' | 'telegram' | null>(() => {
+    const cu = this.cognitoUser();
+    if (cu) return cu.provider;
     if (this.webUser()) return 'telegram';
     return null;
   });
 
   private readonly botId = environment.botId;
-  private googleClientId = '';
-
-  private ghStorageHandler: ((event: StorageEvent) => void) | null = null;
-  private ghStorageTimeout: ReturnType<typeof setTimeout> | null = null;
-  private liStorageHandler: ((event: StorageEvent) => void) | null = null;
-  private liStorageTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    // Fetch public config (Google client ID) from the router
-    const controller = new AbortController();
-    const fetchTimeout = setTimeout(() => controller.abort(), 5000);
-    fetch(`${environment.routerUrl}/config`, { signal: controller.signal })
-      .then(r => r.json())
-      .then(cfg => { this.googleClientId = cfg.googleClientId || ''; })
-      .catch(() => { /* router unreachable — Google login will be unavailable */ })
-      .finally(() => clearTimeout(fetchTimeout));
+    // Listen for Amplify Hub auth events (redirect completions)
+    Hub.listen('auth', ({ payload }) => {
+      if (payload.event === 'signInWithRedirect') {
+        this.checkSession();
+      }
+      if (payload.event === 'signInWithRedirect_failure') {
+        this.authFailed.update(n => n + 1);
+      }
+    });
 
-    // Restore session from storage (sync on web, async on native)
+    // Check for existing Cognito session on startup
+    this.checkSession();
+
+    // Restore Telegram session from storage (for Telegram WebApp context)
     if (this.platformSvc.isNative) {
-      this.restoreSessionAsync();
+      this.restoreTelegramSessionAsync();
     } else {
-      this.restoreSessionSync();
+      this.restoreTelegramSessionSync();
     }
   }
 
-  private restoreSessionSync(): void {
+  private restoreTelegramSessionSync(): void {
     const stored = sessionStorage.getItem('tg_web_user');
     if (stored) {
       try { this.webUser.set(JSON.parse(stored)); } catch { /* ignore */ }
     }
-    const googleStored = sessionStorage.getItem('google_user');
-    if (googleStored) {
-      try { this.googleUser.set(JSON.parse(googleStored)); } catch { /* ignore */ }
-    }
-    const githubStored = sessionStorage.getItem('github_user');
-    if (githubStored) {
-      try { this.githubUser.set(JSON.parse(githubStored)); } catch { /* ignore */ }
-    }
-    const linkedinStored = sessionStorage.getItem('linkedin_user');
-    if (linkedinStored) {
-      try { this.linkedinUser.set(JSON.parse(linkedinStored)); } catch { /* ignore */ }
+  }
+
+  private async restoreTelegramSessionAsync(): Promise<void> {
+    const val = await this.storage.get('tg_web_user');
+    if (val) {
+      try { this.webUser.set(JSON.parse(val)); } catch { /* ignore */ }
     }
   }
 
-  private async restoreSessionAsync(): Promise<void> {
-    const keys: { key: string; setter: (v: any) => void }[] = [
-      { key: 'tg_web_user', setter: v => this.webUser.set(v) },
-      { key: 'google_user', setter: v => this.googleUser.set(v) },
-      { key: 'github_user', setter: v => this.githubUser.set(v) },
-      { key: 'linkedin_user', setter: v => this.linkedinUser.set(v) },
-    ];
-    for (const { key, setter } of keys) {
-      const val = await this.storage.get(key);
-      if (val) {
-        try { setter(JSON.parse(val)); } catch { /* ignore */ }
+  /** Check for existing Cognito session and restore cognitoUser signal */
+  async checkSession(): Promise<void> {
+    try {
+      const user = await getCurrentUser();
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+      if (!user || !idToken) return;
+
+      const payload = session.tokens?.idToken?.payload as Record<string, any> | undefined;
+      const email = (payload?.['email'] as string) || '';
+      const name = (payload?.['name'] as string) || '';
+
+      // Determine provider from Cognito identities
+      const identities = payload?.['identities'] as Array<{ providerName: string }> | undefined;
+      let provider: CognitoUser['provider'] = 'email';
+      if (identities?.length) {
+        const p = identities[0].providerName.toLowerCase();
+        if (p.includes('google')) provider = 'google';
+        else if (p.includes('linkedin')) provider = 'linkedin';
+        else if (p.includes('github')) provider = 'github';
+        else if (p.includes('telegram')) provider = 'telegram';
       }
+
+      this.cognitoUser.set({ provider, sub: user.userId, email, name, idToken });
+      this.authState.set('idle');
+      this.authError.set(null);
+    } catch {
+      // No active session — that's fine
     }
   }
 
-  login(user: TelegramLoginUser): void {
-    this.webUser.set(user);
-    this.storage.set('tg_web_user', JSON.stringify(user));
-  }
-
-  logout(): void {
-    this.webUser.set(null);
-    this.googleUser.set(null);
-    this.githubUser.set(null);
-    this.linkedinUser.set(null);
-    this.storage.remove('tg_web_user');
-    this.storage.remove('google_user');
-    this.storage.remove('github_user');
-    this.storage.remove('linkedin_user');
-  }
-
-  logoutProvider(provider: string): void {
-    if (provider === 'telegram') {
-      this.webUser.set(null);
-      this.storage.remove('tg_web_user');
-    } else if (provider === 'google') {
-      this.googleUser.set(null);
-      this.storage.remove('google_user');
-    } else if (provider === 'github') {
-      this.githubUser.set(null);
-      this.storage.remove('github_user');
-    } else if (provider === 'linkedin') {
-      this.linkedinUser.set(null);
-      this.storage.remove('linkedin_user');
+  /** Get a fresh ID token (refreshes if expired) */
+  async getFreshIdToken(): Promise<string | null> {
+    try {
+      const session = await fetchAuthSession({ forceRefresh: true });
+      const idToken = session.tokens?.idToken?.toString() || null;
+      if (idToken) {
+        const cu = this.cognitoUser();
+        if (cu) {
+          this.cognitoUser.set({ ...cu, idToken });
+        }
+      }
+      return idToken;
+    } catch {
+      return null;
     }
   }
 
   getAuthPayload(): (TelegramLoginUser | { type: 'auth'; provider: string; code: string }) | null {
-    const li = this.linkedinUser();
-    if (li) return { type: 'auth', provider: 'linkedin', code: li.code };
-    const gh = this.githubUser();
-    if (gh) return { type: 'auth', provider: 'github', code: gh.code };
-    const g = this.googleUser();
-    if (g) return { type: 'auth', provider: 'google', code: g.code };
+    const cu = this.cognitoUser();
+    if (cu) return { type: 'auth', provider: cu.provider, code: cu.idToken };
     return this.webUser();
   }
 
-  getGoogleAuthPayload(): { provider: 'google'; code: string } | null {
-    const g = this.googleUser();
-    if (!g) return null;
-    return { provider: 'google', code: g.code };
+  // ── Email/password methods ──
+
+  async signInWithEmail(email: string, password: string): Promise<void> {
+    this.authState.set('loading');
+    this.authError.set(null);
+    try {
+      const result = await signIn({ username: email, password });
+      if (result.isSignedIn) {
+        await this.checkSession();
+      } else if (result.nextStep?.signInStep === 'CONFIRM_SIGN_UP') {
+        this.authState.set('confirm');
+      }
+    } catch (err: any) {
+      this.authState.set('signIn');
+      this.authError.set(err.message || 'Sign in failed');
+      this.authFailed.update(n => n + 1);
+    }
   }
+
+  async signUpWithEmail(email: string, password: string): Promise<void> {
+    this.authState.set('loading');
+    this.authError.set(null);
+    try {
+      const result = await signUp({ username: email, password, options: { userAttributes: { email } } });
+      if (result.isSignUpComplete) {
+        // Auto-confirm (unlikely without verification), try sign in
+        await this.signInWithEmail(email, password);
+      } else {
+        this.authState.set('confirm');
+      }
+    } catch (err: any) {
+      this.authState.set('signUp');
+      this.authError.set(err.message || 'Sign up failed');
+      this.authFailed.update(n => n + 1);
+    }
+  }
+
+  async confirmSignUpCode(email: string, code: string): Promise<void> {
+    this.authState.set('loading');
+    this.authError.set(null);
+    try {
+      const result = await confirmSignUp({ username: email, confirmationCode: code });
+      if (result.isSignUpComplete) {
+        this.authState.set('signIn');
+      }
+    } catch (err: any) {
+      this.authState.set('confirm');
+      this.authError.set(err.message || 'Verification failed');
+    }
+  }
+
+  async resendSignUpCode(email: string): Promise<void> {
+    try {
+      await resendSignUpCode({ username: email });
+    } catch (err: any) {
+      this.authError.set(err.message || 'Failed to resend code');
+    }
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    this.authState.set('loading');
+    this.authError.set(null);
+    try {
+      await resetPassword({ username: email });
+      this.authState.set('reset');
+    } catch (err: any) {
+      this.authState.set('forgot');
+      this.authError.set(err.message || 'Failed to send reset code');
+    }
+  }
+
+  async confirmForgotPassword(email: string, code: string, newPassword: string): Promise<void> {
+    this.authState.set('loading');
+    this.authError.set(null);
+    try {
+      await confirmResetPassword({ username: email, confirmationCode: code, newPassword });
+      this.authState.set('signIn');
+    } catch (err: any) {
+      this.authState.set('reset');
+      this.authError.set(err.message || 'Password reset failed');
+    }
+  }
+
+  // ── Social login methods ──
+
+  signInWithGoogle(): void {
+    try {
+      signInWithRedirect({ provider: 'Google' });
+    } catch {
+      this.authFailed.update(n => n + 1);
+    }
+  }
+
+  signInWithLinkedin(): void {
+    try {
+      signInWithRedirect({ provider: { custom: 'LinkedIn' } });
+    } catch {
+      this.authFailed.update(n => n + 1);
+    }
+  }
+
+  loginWithGithub(): void {
+    const routerUrl = environment.routerUrl;
+    if (!routerUrl) { this.authFailed.update(n => n + 1); return; }
+
+    const state = crypto.randomUUID();
+    this.storage.set('github_oauth_state', state);
+
+    // Native: open in-app browser; backend exchanges code → returns Cognito tokens
+    if (Capacitor.isNativePlatform()) {
+      Browser.open({
+        url: `${routerUrl}/auth/github/start?state=${encodeURIComponent(state)}&redirect=native`,
+      });
+      return;
+    }
+
+    // Web: popup flow → backend returns Cognito tokens
+    const popup = window.open(
+      `${routerUrl}/auth/github/start?state=${encodeURIComponent(state)}`,
+      'github_auth',
+      'width=600,height=700,left=200,top=100',
+    );
+
+    if (!popup) { this.authFailed.update(n => n + 1); return; }
+
+    const popupPoll = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(popupPoll);
+        setTimeout(() => { if (!this.cognitoUser()) this.authFailed.update(n => n + 1); }, 500);
+      }
+    }, 500);
+
+    const cleanup = () => {
+      window.removeEventListener('storage', handler);
+      if (storageTimeout) clearTimeout(storageTimeout);
+    };
+    const handler = (event: StorageEvent) => {
+      if (event.key === 'github_auth' && event.newValue) {
+        cleanup();
+        try {
+          const data = JSON.parse(event.newValue);
+          localStorage.removeItem('github_auth');
+          const savedState = sessionStorage.getItem('github_oauth_state');
+          sessionStorage.removeItem('github_oauth_state');
+          if (!savedState || data.state !== savedState) return;
+          if (data.idToken) {
+            // Backend returned Cognito tokens
+            this.cognitoUser.set({
+              provider: 'github',
+              sub: data.sub || '',
+              email: data.email || '',
+              name: data.name || '',
+              idToken: data.idToken,
+            });
+            this.authState.set('idle');
+          }
+        } catch { /* ignore */ }
+      }
+    };
+    window.addEventListener('storage', handler);
+    const storageTimeout = setTimeout(cleanup, 60000);
+  }
+
+  // ── Telegram login ──
 
   openTelegramLogin(): void {
     const tgLogin = (window as any).Telegram?.Login;
@@ -178,206 +329,63 @@ export class AuthService {
     );
   }
 
-  loginWithGoogle(): void {
-    // On native, Google Sign-In SDK is not available; use browser-based OAuth
-    if (Capacitor.isNativePlatform()) {
-      this.loginWithGoogleNative();
-      return;
-    }
-
-    if (typeof google === 'undefined' || !google.accounts?.oauth2) { this.authFailed.update(n => n + 1); return; }
-    if (!this.googleClientId) { this.authFailed.update(n => n + 1); return; }
-
-    const codeClient = google.accounts.oauth2.initCodeClient({
-      client_id: this.googleClientId,
-      scope: 'openid email profile https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar',
-      ux_mode: 'popup',
-      callback: (response: { code: string; error?: string }) => {
-        if (response.error || !response.code) { this.authFailed.update(n => n + 1); return; }
-        const user: GoogleUser = {
-          provider: 'google',
-          code: response.code,
-          email: '',
-          name: '',
-        };
-        this.googleUser.set(user);
-        this.storage.set('google_user', JSON.stringify(user));
-      },
-    });
-    codeClient.requestCode();
+  login(user: TelegramLoginUser): void {
+    this.webUser.set(user);
+    this.storage.set('tg_web_user', JSON.stringify(user));
   }
 
-  private loginWithGoogleNative(): void {
-    const routerUrl = environment.routerUrl;
-    if (!routerUrl) { this.authFailed.update(n => n + 1); return; }
-    const state = crypto.randomUUID();
-    this.storage.set('google_oauth_state', state);
-    Browser.open({
-      url: `${routerUrl}/auth/google/start?state=${encodeURIComponent(state)}&redirect=native`,
-    });
+  // ── Logout ──
+
+  async logout(): Promise<void> {
+    try { await signOut(); } catch { /* ignore */ }
+    this.cognitoUser.set(null);
+    this.webUser.set(null);
+    this.storage.remove('tg_web_user');
+    this.authState.set('signIn');
+    this.authError.set(null);
   }
 
-  loginWithGithub(): void {
-    const routerUrl = environment.routerUrl;
-    if (!routerUrl) { this.authFailed.update(n => n + 1); return; }
-
-    const state = crypto.randomUUID();
-    this.storage.set('github_oauth_state', state);
-
-    // Native: open in-app browser; OAuth completes via deep link callback
-    if (Capacitor.isNativePlatform()) {
-      Browser.open({
-        url: `${routerUrl}/auth/github/start?state=${encodeURIComponent(state)}&redirect=native`,
-      });
-      return;
+  logoutProvider(provider: string): void {
+    if (provider === 'telegram') {
+      this.webUser.set(null);
+      this.storage.remove('tg_web_user');
+    } else {
+      // For Cognito-backed providers, full sign out
+      this.logout();
     }
-
-    // Web: popup flow
-    const popup = window.open(
-      `${routerUrl}/auth/github/start?state=${encodeURIComponent(state)}`,
-      'github_auth',
-      'width=600,height=700,left=200,top=100',
-    );
-
-    if (!popup) { this.authFailed.update(n => n + 1); return; }
-
-    const popupPoll = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(popupPoll);
-        setTimeout(() => { if (!this.githubUser()) this.authFailed.update(n => n + 1); }, 500);
-      }
-    }, 500);
-
-    if (this.ghStorageHandler) {
-      window.removeEventListener('storage', this.ghStorageHandler);
-      this.ghStorageHandler = null;
-    }
-    if (this.ghStorageTimeout) {
-      clearTimeout(this.ghStorageTimeout);
-      this.ghStorageTimeout = null;
-    }
-
-    const cleanup = () => {
-      window.removeEventListener('storage', handler);
-      this.ghStorageHandler = null;
-      if (this.ghStorageTimeout) { clearTimeout(this.ghStorageTimeout); this.ghStorageTimeout = null; }
-    };
-    const handler = (event: StorageEvent) => {
-      if (event.key === 'github_auth' && event.newValue) {
-        cleanup();
-        try {
-          const data = JSON.parse(event.newValue);
-          localStorage.removeItem('github_auth');
-          const savedState = sessionStorage.getItem('github_oauth_state');
-          sessionStorage.removeItem('github_oauth_state');
-          if (!savedState || data.state !== savedState) return;
-          if (data.code) {
-            const user: GitHubUser = { provider: 'github', code: data.code };
-            this.githubUser.set(user);
-            this.storage.set('github_user', JSON.stringify(user));
-          }
-        } catch { /* ignore */ }
-      }
-    };
-    this.ghStorageHandler = handler;
-    window.addEventListener('storage', handler);
-    this.ghStorageTimeout = setTimeout(cleanup, 60000);
-  }
-
-  loginWithLinkedin(): void {
-    const routerUrl = environment.routerUrl;
-    if (!routerUrl) { this.authFailed.update(n => n + 1); return; }
-
-    const state = crypto.randomUUID();
-    this.storage.set('linkedin_oauth_state', state);
-
-    // Native: open in-app browser; OAuth completes via deep link callback
-    if (Capacitor.isNativePlatform()) {
-      Browser.open({
-        url: `${routerUrl}/auth/linkedin/start?state=${encodeURIComponent(state)}&redirect=native`,
-      });
-      return;
-    }
-
-    // Web: popup flow
-    const popup = window.open(
-      `${routerUrl}/auth/linkedin/start?state=${encodeURIComponent(state)}`,
-      'linkedin_auth',
-      'width=600,height=700,left=200,top=100',
-    );
-
-    if (!popup) { this.authFailed.update(n => n + 1); return; }
-
-    const popupPoll = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(popupPoll);
-        setTimeout(() => { if (!this.linkedinUser()) this.authFailed.update(n => n + 1); }, 500);
-      }
-    }, 500);
-
-    if (this.liStorageHandler) {
-      window.removeEventListener('storage', this.liStorageHandler);
-      this.liStorageHandler = null;
-    }
-    if (this.liStorageTimeout) {
-      clearTimeout(this.liStorageTimeout);
-      this.liStorageTimeout = null;
-    }
-
-    const cleanup = () => {
-      window.removeEventListener('storage', handler);
-      this.liStorageHandler = null;
-      if (this.liStorageTimeout) { clearTimeout(this.liStorageTimeout); this.liStorageTimeout = null; }
-    };
-    const handler = (event: StorageEvent) => {
-      if (event.key === 'linkedin_auth' && event.newValue) {
-        cleanup();
-        try {
-          const data = JSON.parse(event.newValue);
-          localStorage.removeItem('linkedin_auth');
-          const savedState = sessionStorage.getItem('linkedin_oauth_state');
-          sessionStorage.removeItem('linkedin_oauth_state');
-          if (!savedState || data.state !== savedState) return;
-          if (data.code) {
-            const user: LinkedInUser = { provider: 'linkedin', code: data.code };
-            this.linkedinUser.set(user);
-            this.storage.set('linkedin_user', JSON.stringify(user));
-          }
-        } catch { /* ignore */ }
-      }
-    };
-    this.liStorageHandler = handler;
-    window.addEventListener('storage', handler);
-    this.liStorageTimeout = setTimeout(cleanup, 60000);
   }
 
   /** Called by DeepLinkService when a native OAuth callback deep link is received. */
   completeNativeOAuth(provider: 'github' | 'linkedin', code: string, state: string | null): void {
     Browser.close().catch(() => {});
     if (provider === 'github') {
+      // GitHub native callback returns Cognito tokens from backend
       this.storage.get('github_oauth_state').then(savedState => {
         this.storage.remove('github_oauth_state');
         if (!savedState || state !== savedState) return;
-        const user: GitHubUser = { provider: 'github', code };
-        this.githubUser.set(user);
-        this.storage.set('github_user', JSON.stringify(user));
-      });
-    } else if (provider === 'linkedin') {
-      this.storage.get('linkedin_oauth_state').then(savedState => {
-        this.storage.remove('linkedin_oauth_state');
-        if (!savedState || state !== savedState) return;
-        const user: LinkedInUser = { provider: 'linkedin', code };
-        this.linkedinUser.set(user);
-        this.storage.set('linkedin_user', JSON.stringify(user));
+        // The code here is actually a Cognito idToken returned by backend
+        this.cognitoUser.set({
+          provider: 'github',
+          sub: '',
+          email: '',
+          idToken: code,
+        });
+        this.authState.set('idle');
       });
     }
+    // LinkedIn is handled by Cognito redirect via Amplify, so no manual handling needed
   }
 
-  hasLinkedProvider(provider: 'telegram' | 'google' | 'github' | 'linkedin'): boolean {
+  /** Called by DeepLinkService to handle Cognito OAuth callback on native */
+  handleCognitoCallback(): void {
+    // Amplify handles the token exchange automatically via Hub listener
+    this.checkSession();
+  }
+
+  hasLinkedProvider(provider: 'telegram' | 'google' | 'github' | 'linkedin' | 'email'): boolean {
     if (provider === 'telegram') return !!this.webUser();
-    if (provider === 'google') return !!this.googleUser();
-    if (provider === 'github') return !!this.githubUser();
-    if (provider === 'linkedin') return !!this.linkedinUser();
+    const cu = this.cognitoUser();
+    if (cu && cu.provider === provider) return true;
     return false;
   }
 }

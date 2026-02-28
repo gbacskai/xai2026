@@ -32,7 +32,14 @@ export class DeepLinkService {
         return;
       }
 
-      // Handle OAuth callbacks: xaiworkspace://oauth?provider=github&code=xxx&state=yyy
+      // Handle Cognito OAuth callback: xaiworkspace://auth/callback?code=...
+      // Amplify handles the token exchange, but we notify the auth service
+      if (parsed.pathname.startsWith('/auth/callback') || parsed.hostname === 'auth') {
+        this.auth.handleCognitoCallback();
+        return;
+      }
+
+      // Handle legacy OAuth callbacks: xaiworkspace://oauth?provider=github&code=xxx&state=yyy
       if (parsed.hostname === 'oauth' || parsed.pathname.startsWith('/oauth')) {
         const provider = parsed.searchParams.get('provider');
         const code = parsed.searchParams.get('code');

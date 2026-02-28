@@ -87,7 +87,7 @@ export class ChatService {
     }
   }
 
-  connect(): void {
+  async connect(): Promise<void> {
     if (this.tg.isTelegram) return;
 
     // On reconnect, use sessionToken if available
@@ -96,6 +96,16 @@ export class ChatService {
       : null;
 
     if (!authMsg) {
+      // If Cognito user, refresh the ID token before connecting
+      if (this.auth.cognitoUser()) {
+        const freshToken = await this.auth.getFreshIdToken();
+        if (freshToken) {
+          const cu = this.auth.cognitoUser()!;
+          this.setupWs({ type: 'auth', provider: cu.provider, code: freshToken });
+          return;
+        }
+      }
+
       const payload = this.auth.getAuthPayload();
       if (!payload) return;
       this.setupWs(
@@ -402,27 +412,23 @@ export class ChatService {
   private handleWhoami(): void {
     const provider = this.auth.currentProvider();
     const tgUser = this.auth.webUser();
-    const googleUser = this.auth.googleUser();
-    const githubUser = this.auth.githubUser();
-    const linkedinUser = this.auth.linkedinUser();
+    const cognitoUser = this.auth.cognitoUser();
     const chatId = this.currentChatId();
     const linked = this.linkedProviders();
 
     const lines: string[] = ['\ud83e\udded Identity'];
 
-    if (provider === 'telegram' && tgUser) {
+    if (cognitoUser) {
+      const providerLabel = cognitoUser.provider.charAt(0).toUpperCase() + cognitoUser.provider.slice(1);
+      lines.push(`Provider: ${providerLabel}`);
+      if (cognitoUser.name) lines.push(`Name: ${cognitoUser.name}`);
+      if (cognitoUser.email) lines.push(`Email: ${cognitoUser.email}`);
+      lines.push(`Sub: ${cognitoUser.sub}`);
+    } else if (provider === 'telegram' && tgUser) {
       lines.push(`Provider: Telegram`);
       lines.push(`Name: ${tgUser.first_name}${tgUser.last_name ? ' ' + tgUser.last_name : ''}`);
       if (tgUser.username) lines.push(`Username: @${tgUser.username}`);
       lines.push(`User ID: ${tgUser.id}`);
-    } else if (provider === 'google' && googleUser) {
-      lines.push(`Provider: Google`);
-      if (googleUser.name) lines.push(`Name: ${googleUser.name}`);
-      if (googleUser.email) lines.push(`Email: ${googleUser.email}`);
-    } else if (provider === 'linkedin' && linkedinUser) {
-      lines.push(`Provider: LinkedIn`);
-    } else if (provider === 'github' && githubUser) {
-      lines.push(`Provider: GitHub`);
     } else if (this.tg.isTelegram) {
       const u = this.tg.user();
       lines.push(`Channel: xAI Workspace`);

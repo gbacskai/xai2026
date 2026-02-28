@@ -227,6 +227,19 @@ export interface UiStrings {
   'trust.privacy': string;
   'trust.privacyDesc': string;
   'trust.statement': string;
+  'chat.signIn': string;
+  'chat.signUp': string;
+  'chat.forgotPassword': string;
+  'chat.alreadyHaveAccount': string;
+  'chat.createAccount': string;
+  'chat.verifyCode': string;
+  'chat.verificationSent': string;
+  'chat.resendCode': string;
+  'chat.resetPassword': string;
+  'chat.sendResetCode': string;
+  'chat.orContinueWith': string;
+  'chat.backToSignIn': string;
+  'chat.loginEmail': string;
 }
 
 export interface LocalizedArticle {

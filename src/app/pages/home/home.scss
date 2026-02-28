@@ -121,30 +121,6 @@
     color: var(--tg-theme-hint-color);
   }
 
-  .hero-telegram-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 14px;
-    padding: 10px 22px;
-    border-radius: 20px;
-    background: #2AABEE;
-    color: #ffffff !important;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.15s;
-    box-shadow: 0 2px 8px rgba(42, 171, 238, 0.3);
-
-    &:active {
-      opacity: 0.85;
-    }
-
-    svg {
-      flex-shrink: 0;
-    }
-  }
 }
 
 // --- Trust strip ---
@@ -195,6 +171,133 @@
   color: var(--tg-theme-hint-color);
   max-width: 360px;
   margin: 12px auto 0;
+}
+
+// --- Email login box ---
+.login-email-box {
+  margin: 0 16px 0;
+  padding: 20px 16px;
+  border-radius: 12px;
+  background: var(--tg-theme-section-bg-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+.email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &--loading {
+    align-items: center;
+    padding: 20px 0;
+  }
+}
+
+.login-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 10px;
+  background: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: var(--tg-theme-hint-color);
+  }
+
+  &:focus {
+    border-color: var(--brand-primary);
+  }
+}
+
+.login-submit {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--brand-gradient);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+
+  &:active {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.login-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.login-link {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--tg-theme-link-color);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.login-error {
+  font-size: 13px;
+  color: #dc2626;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.login-info {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color);
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  margin: 14px 16px;
+  gap: 12px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(128, 128, 128, 0.2);
+  }
+
+  span {
+    font-size: 13px;
+    color: var(--tg-theme-hint-color);
+    white-space: nowrap;
+  }
 }
 
 // --- Login box (card-style provider list) ---

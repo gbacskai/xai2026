@@ -26,6 +26,13 @@ export class HomePage implements OnInit, OnDestroy {
 
   linkingProvider = signal<string | null>(null);
 
+  // Email auth form signals
+  emailInput = signal('');
+  passwordInput = signal('');
+  codeInput = signal('');
+  newPasswordInput = signal('');
+  emailLoading = computed(() => this.auth.authState() === 'loading');
+
   private authFailedEffect = effect(() => {
     this.auth.authFailed(); // track the signal
     this.linkingProvider.set(null);
@@ -34,14 +41,14 @@ export class HomePage implements OnInit, OnDestroy {
   locales = SUPPORTED_LOCALES;
   localeLabels = LOCALE_LABELS;
   langOpen = signal(false);
-  isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
   linkedProviders = computed(() => {
     const list: { key: string; label: string }[] = [];
     if (this.auth.webUser()) list.push({ key: 'telegram', label: 'Telegram' });
-    if (this.auth.googleUser()) list.push({ key: 'google', label: 'Google' });
-    if (this.auth.githubUser()) list.push({ key: 'github', label: 'GitHub' });
-    if (this.auth.linkedinUser()) list.push({ key: 'linkedin', label: 'LinkedIn' });
+    const cu = this.auth.cognitoUser();
+    if (cu) {
+      const label = cu.provider.charAt(0).toUpperCase() + cu.provider.slice(1);
+      list.push({ key: cu.provider, label });
+    }
     return list;
   });
 
@@ -106,6 +113,61 @@ export class HomePage implements OnInit, OnDestroy {
     }
   }
 
+  // ── Email auth methods ──
+
+  setAuthState(state: 'signIn' | 'signUp' | 'confirm' | 'forgot' | 'reset') {
+    this.auth.authState.set(state);
+    this.auth.authError.set(null);
+  }
+
+  signIn(event: Event) {
+    event.preventDefault();
+    const email = this.emailInput().trim();
+    const password = this.passwordInput();
+    if (!email || !password) return;
+    this.auth.signInWithEmail(email, password);
+  }
+
+  signUp(event: Event) {
+    event.preventDefault();
+    const email = this.emailInput().trim();
+    const password = this.passwordInput();
+    if (!email || !password) return;
+    this.auth.signUpWithEmail(email, password);
+  }
+
+  confirmCode() {
+    const email = this.emailInput().trim();
+    const code = this.codeInput().trim();
+    if (!email || !code) return;
+    this.auth.confirmSignUpCode(email, code);
+  }
+
+  resendCode() {
+    const email = this.emailInput().trim();
+    if (!email) return;
+    this.auth.resendSignUpCode(email);
+    this.toast.show('Verification code resent', 'success');
+  }
+
+  handleForgotPassword(event: Event) {
+    event.preventDefault();
+    const email = this.emailInput().trim();
+    if (!email) return;
+    this.auth.forgotPassword(email);
+  }
+
+  handleResetPassword(event: Event) {
+    event.preventDefault();
+    const email = this.emailInput().trim();
+    const code = this.codeInput().trim();
+    const newPassword = this.newPasswordInput();
+    if (!email || !code || !newPassword) return;
+    this.auth.confirmForgotPassword(email, code, newPassword);
+  }
+
+  // ── Social login methods ──
+
   loginWithTelegram() {
     this.tg.haptic();
     this.linkingProvider.set('telegram');
@@ -116,7 +178,7 @@ export class HomePage implements OnInit, OnDestroy {
   loginWithGoogle() {
     this.tg.haptic();
     this.linkingProvider.set('google');
-    this.auth.loginWithGoogle();
+    this.auth.signInWithGoogle();
     this.startLinkingTimeout();
   }
 
@@ -130,7 +192,7 @@ export class HomePage implements OnInit, OnDestroy {
   loginWithLinkedin() {
     this.tg.haptic();
     this.linkingProvider.set('linkedin');
-    this.auth.loginWithLinkedin();
+    this.auth.signInWithLinkedin();
     this.startLinkingTimeout();
   }
 
@@ -158,11 +220,7 @@ export class HomePage implements OnInit, OnDestroy {
   linkGoogle() {
     this.tg.haptic();
     this.linkingProvider.set('google');
-    this.auth.loginWithGoogle();
-    this.pollUntil(
-      () => !!this.auth.getGoogleAuthPayload(),
-      () => { this.linkingProvider.set(null); this.chat.sendLinkProvider('google', { code: this.auth.getGoogleAuthPayload()!.code }); },
-    );
+    this.auth.signInWithGoogle();
     this.startLinkingTimeout();
   }
 
@@ -171,8 +229,8 @@ export class HomePage implements OnInit, OnDestroy {
     this.linkingProvider.set('github');
     this.auth.loginWithGithub();
     this.pollUntil(
-      () => !!this.auth.githubUser(),
-      () => { this.linkingProvider.set(null); this.chat.sendLinkProvider('github', { code: this.auth.githubUser()!.code }); },
+      () => !!this.auth.cognitoUser(),
+      () => { this.linkingProvider.set(null); },
     );
     this.startLinkingTimeout();
   }
@@ -180,11 +238,7 @@ export class HomePage implements OnInit, OnDestroy {
   linkLinkedin() {
     this.tg.haptic();
     this.linkingProvider.set('linkedin');
-    this.auth.loginWithLinkedin();
-    this.pollUntil(
-      () => !!this.auth.linkedinUser(),
-      () => { this.linkingProvider.set(null); this.chat.sendLinkProvider('linkedin', { code: this.auth.linkedinUser()!.code }); },
-    );
+    this.auth.signInWithLinkedin();
     this.startLinkingTimeout();
   }
 
