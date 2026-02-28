@@ -75,7 +75,7 @@ create_codebuild_project() {
   ${AWS} codebuild create-project \
     --name "${name}" \
     --description "${description}" \
-    --source "type=CODECOMMIT,location=https://git-codecommit.${REGION}.amazonaws.com/v1/repos/${CODECOMMIT_REPO},buildspec=${buildspec}" \
+    --source "type=CODEPIPELINE,buildspec=${buildspec}" \
     --artifacts "type=CODEPIPELINE" \
     --environment "type=${env_type},computeType=${compute},image=${image},environmentVariables=${env_arg}" \
     --service-role "arn:aws:iam::${ACCOUNT_ID}:role/${CODEBUILD_ROLE}" \
